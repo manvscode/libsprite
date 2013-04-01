@@ -26,4 +26,11 @@ configure
 depcomp
 install-sh
 missing
+Makefile.in
+config.log
+config.status
+ltmain.sh
+src/Makefile.in
+tests/Makefile.in
+
 
