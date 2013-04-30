@@ -21,11 +21,13 @@
  */
 #ifndef _SPRITE_H_
 #define _SPRITE_H_
+#include <stdbool.h>
+#include <stdint.h>
 #ifdef __cplusplus
 extern "C" {
 #endif 
 
-struct sprite {
+struct sprite;
 typedef struct sprite sprite_t;
 
 struct sprite_state;
@@ -44,7 +46,7 @@ void                  sprite_create             ( sprite_t* p_sprite, const char
 void                  sprite_destroy_ex         ( sprite_t** p_sprite );
 void                  sprite_destroy            ( sprite_t* p_sprite );
 
-bool                  sprite_add_state          ( sprite_t* p_sprite, const char* state, uint16_t* index );
+bool                  sprite_add_state          ( sprite_t* p_sprite, const char* state );
 bool                  sprite_add_frame          ( sprite_t* p_sprite, const char* state, uint16_t x, uint16_t y, uint16_t width, uint16_t height );
 bool                  sprite_remove_state       ( sprite_t* p_sprite, const char* state );
 bool                  sprite_remove_frame       ( sprite_t* p_sprite, const char* state, uint16_t index );
@@ -54,21 +56,21 @@ uint16_t              sprite_width              ( const sprite_t* p_sprite );
 uint16_t              sprite_height             ( const sprite_t* p_sprite );
 uint16_t              sprite_bytes_per_pixel    ( const sprite_t* p_sprite );
 const void*           sprite_pixels             ( const sprite_t* p_sprite );
-bool                  sprite_find_state         ( const sprite_t* p_sprite, const char* state, uint8_t* index );
-uint8_t               sprite_state_count        ( const sprite_t* p_sprite );
 const sprite_state_t* sprite_state              ( const sprite_t* p_sprite, const char* state );
-const sprite_state_t* sprite_state_by_index     ( const sprite_t* p_sprite, uint16_t index );
+uint8_t               sprite_state_count        ( const sprite_t* p_sprite );
 const char*           sprite_state_name         ( const sprite_state_t* p_state );
-const char*           sprite_state_frame_count  ( const sprite_state_t* p_state );
-const sprite_frame_t* sprite_state_frames       ( const sprite_state_t* p_state );
+uint16_t              sprite_state_frame_count  ( const sprite_state_t* p_state );
+const sprite_frame_t* sprite_state_frame        ( const sprite_state_t* p_state, uint16_t index );
 
 
 bool sprite_load( sprite_t* p_sprite, const char* filename )
 {
+	return true;
 }
 
 bool sprite_save( sprite_t* p_sprite, const char* filename )
 {
+	return true;
 }
 
 #ifdef __cplusplus

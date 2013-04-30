@@ -19,15 +19,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <libcollections/array.h>
+#include <libcollections/tree-map.h>
 #include "sprite.h"
 
 struct sprite_state {
-	uint16_t        name_length;
-	char*           name;
-	uint16_t        fps;
-	uint16_t        count;
-	sprite_frame_t* frames;
+	uint16_t name_length;
+	char*    name;
+	uint16_t fps;
+	array_t  frames;
 };
 
 struct sprite {
@@ -36,11 +39,58 @@ struct sprite {
 	uint16_t width;
 	uint16_t height;
 	uint8_t  bytes_per_pixel;
-	uint8_t* pixels;
+	void*    pixels;
 
-	uint8_t         state_count;
-	sprite_state_t* states;
+	tree_map_t states;  /* name -> state */
 };
+
+
+sprite_state_t* sprite_state_create( const char* name )
+{
+	sprite_state_t* p_state = malloc( sizeof(sprite_state_t) );
+
+	if( p_state )
+	{
+		p_state->name_length = strlen( name );
+		p_state->name        = strdup( name );
+		p_state->fps         = 60;
+
+		array_create( &p_state->frames, sizeof(sprite_frame_t), 0, malloc, free );
+	}
+
+	return p_state;
+}
+
+void sprite_state_destroy( sprite_state_t* p_state )
+{
+	assert( p_state );
+
+	if( p_state->name )
+	{
+		free( p_state->name );
+		#ifdef SPRITE_DEBUG
+		p_state->name_length = 0;
+		p_state->name        = NULL;
+		p_state->fps         = 0;
+		#endif
+	}
+
+	array_destroy( &p_state->frames );
+	free( p_state );
+}
+
+
+boolean sprite_state_map_destroy( const char* name, sprite_state_t* state )
+{
+	sprite_state_destroy( state );
+	return true;
+}
+
+
+int sprite_state_name_compare( const char* name1, const char* name2 )
+{
+	return strcasecmp( name1, name2 );
+}
 
 
 sprite_t* sprite_create_ex( const char* name, bool use_transparency )
@@ -64,8 +114,9 @@ void sprite_create( sprite_t* p_sprite, const char* name, bool use_transparency 
 	p_sprite->height          = 0;
 	p_sprite->bytes_per_pixel = use_transparency ? 4 : 3;
 	p_sprite->pixels          = NULL;
-	p_sprite->states          = NULL;
-	p_sprite->state_count     = 0;
+
+	tree_map_create( &p_sprite->states, (tree_map_element_function) sprite_state_map_destroy,
+  	                 (tree_map_compare_function) sprite_state_name_compare, malloc, free );
 }
 
 void sprite_destroy_ex( sprite_t** p_sprite )
@@ -103,63 +154,18 @@ void sprite_destroy( sprite_t* p_sprite )
 		#endif
 	}
 
-	if( p_sprite->states )
-	{
-		for( size_t i = 0; i < p_sprite->state_count; i++ )
-		{
-			sprite_state_t* p_state = p_sprite->states[ i ];
-
-			if( p_state->name )
-			{
-				free( p_state->name );
-				#ifdef SPRITE_DEBUG
-				p_state->name_length = 0;
-				p_state->name        = NULL;
-				#endif
-			}
-
-			if( p_state->frames )
-			{
-				free( p_state->frames );
-				#ifdef SPRITE_DEBUG
-				p_state->fps    = 0;
-				p_state->count  = 0;
-				p_state->frames = NULL;
-				#endif
-			}
-
-			free( p_state );
-		}
-
-		#ifdef SPRITE_DEBUG
-		p_sprite->state_count = 0;
-		#endif
-	}
+	tree_map_destroy( &p_sprite->states );
 }
 
-bool sprite_add_state( sprite_t* p_sprite, const char* name, uint16_t* index )
+bool sprite_add_state( sprite_t* p_sprite, const char* name )
 {
 	bool result = false;
 
 	if( p_sprite )
 	{
-		p_sprite->states = calloc( p_sprite->state_count + 1, sizeof(sprite_state_t) );
+		sprite_state_t* p_state = sprite_state_create( name );
 
-		if( p_sprite->states )
-		{
-			sprite_state_t* p_state = &p_sprite->states[ p_sprite->state_count ];
-
-			p_state->name_length = strlen( name );
-			p_state->name        = strdup( name );
-			p_state->fps         = 60;
-			p_state->count       = 0;
-			p_state->frames      = NULL;
-
-			*index = p_sprite->state_count;
-			p_sprite->state_count++;
-
-			result = true;
-		}
+		result = tree_map_insert( &p_sprite->states, p_state->name, p_state );
 	}
 
 	return result;
@@ -169,32 +175,23 @@ bool sprite_add_frame( sprite_t* p_sprite, const char* state, uint16_t x, uint16
 {
 	bool result = false;
 
-	if( p_sprite && p_sprite->states )
+	if( p_sprite )
 	{
-		for( size_t i = 0; i < p_sprite->states_count; i++ )
+		sprite_state_t* p_state = NULL;
+
+		if( tree_map_find( &p_sprite->states, state, (void**) &p_state ) )
 		{
-			sprite_state_t* p_state = &p_sprite->states[ i ];
+			size_t new_array_size = array_size(&p_state->frames) + 1;
+			array_resize( &p_state->frames, new_array_size );
 
-			if( strncasecmp( state, p_state->name, p_state->name_length ) == 0 )
-			{
-				p_state->frames = calloc( p_state->count + 1, sizeof(sprite_frame_t) );
+			sprite_frame_t* p_frame = array_elem( &p_state->frames, new_array_size - 1, sprite_frame_t );
 
-				if( p_state->frames )
-				{
-					sprite_frame_t* p_frame = &p_a->states[ p_state->count ];
+			p_frame->x      = x;
+			p_frame->y      = y;
+			p_frame->width  = width;
+			p_frame->height = height;
 
-					p_frame->x      = x;
-					p_frame->y      = y;
-					p_frame->width  = width;
-					p_frame->height = height;
-
-					p_state->count++;
-
-					result = true;
-				}
-
-				break;
-			}
+			result = true;
 		}
 	}
 
@@ -205,27 +202,9 @@ bool sprite_remove_state( sprite_t* p_sprite, const char* name )
 {
 	bool result = false;
 
-	if( p_sprite && p_sprite->states )
+	if( p_sprite )
 	{
-		for( uint16_t i = 0; i < p_sprite->states_count; i++ )
-		{
-			sprite_state_t* p_state = &p_sprite->states[ i ];
-
-			if( strncasecmp( state, p_state->name, p_state->name_length ) == 0 )
-			{
-				free( p_state->name );
-				free( p_state->frames );
-
-				/* shift the collection down */
-				for( uint16_t j = i; < p_sprite->states_count - 1; j++ )
-				{
-					p_sprite->states[ j ] = p_sprite->states[ j + 1 ];
-				}
-
-				p_sprite->states_count--;
-				result = true;
-			}
-		}
+		result = tree_map_remove( &p_sprite->states, name );
 	}
 
 	return result;
@@ -235,22 +214,25 @@ bool sprite_remove_frame( sprite_t* p_sprite, const char* state, uint16_t index 
 {
 	bool result = false;
 
-	if( p_sprite && p_sprite->states )
+	if( p_sprite )
 	{
-		for( uint16_t i = 0; i < p_sprite->states_count; i++ )
+		sprite_state_t* p_state = NULL;
+
+		if( tree_map_find( &p_sprite->states, state, (void**) &p_state ) )
 		{
-			sprite_state_t* p_state = &p_sprite->states[ i ];
-
-			if( strncasecmp( state, p_state->name, p_state->name_length ) == 0 )
+			/* shift the array */
+			for( uint16_t i = index; i < array_size(&p_state->frames); i++ )
 			{
-				for( uint16_t j = index; j < p_state->count - 1; j++ )
-				{
-					p_state->frames[ j ] = p_state->frames[ j + 1 ];
-					result = true;
-				}
+				sprite_frame_t* current  = array_elem( &p_state->frames, i, sprite_frame_t );
+				sprite_frame_t* neighbor = array_elem( &p_state->frames, i + 1, sprite_frame_t );
 
-				break;
+				*current = *neighbor;
 			}
+
+			/* decrease the array by 1 */
+			size_t new_array_size = array_size(&p_state->frames) - 1;
+			array_resize( &p_state->frames, new_array_size );
+			result = true;
 		}
 	}
 
@@ -282,51 +264,23 @@ const void* sprite_pixels( const sprite_t* p_sprite )
 	return p_sprite ? p_sprite->pixels : NULL;
 }
 
-bool sprite_find_state( const sprite_t* p_sprite, const char* state, uint8_t* index )
-{
-	bool result = false;
-
-	if( p_sprite )
-	{
-		for( uint8_t i = 0; i < p_sprite->states_count; i++ )
-		{
-			if( strncasecmp( state, p_sprite->states[ i ].name, p_sprite->states[ i ].name_length ) == 0 )
-			{
-				*index = i;
-				result = true;
-				break;
-			}
-		}
-	}
-
-	return result;
-}
-
-uint8_t sprite_state_count( const sprite_t* p_sprite )
-{
-	return p_sprite ? p_sprite->states_count : 0;
-}
-
 const sprite_state_t* sprite_state( const sprite_t* p_sprite, const char* state )
 {
 	if( p_sprite )
 	{
-		for( uint8_t i = 0; i < p_sprite->states_count; i++ )
+		sprite_state_t* p_state = NULL;
+		if( tree_map_find( &p_sprite->states, state, (void**) &p_state ) )
 		{
-			if( strncasecmp( state, p_sprite->states[ i ].name, p_sprite->states[ i ].name_length ) == 0 )
-			{
-				return &p_sprite->states[ i ];
-			}
+			return p_state;
 		}
 	}
 
 	return NULL;
 }
 
-const sprite_state_t* sprite_state_by_index( const sprite_t* p_sprite, uint16_t index )
+uint8_t sprite_state_count( const sprite_t* p_sprite )
 {
-	assert( p_sprite && index < p_sprite->states_count );
-	return &p_sprite->states[ index ];
+	return p_sprite ? tree_map_size( &p_sprite->states ) : 0;
 }
 
 const char* sprite_state_name( const sprite_state_t* p_state )
@@ -334,15 +288,15 @@ const char* sprite_state_name( const sprite_state_t* p_state )
 	return p_state ? p_state->name : "<uninitialized state>";
 }
 
-const char* sprite_state_frame_count( const sprite_state_t* p_state )
+uint16_t sprite_state_frame_count( const sprite_state_t* p_state )
 {
 	assert( p_state );
-	return p_state->count;
+	return array_size( &p_state->frames );
 }
 
-const sprite_frame_t* sprite_state_frames( const sprite_state_t* p_state )
+const sprite_frame_t* sprite_state_frame( const sprite_state_t* p_state, uint16_t index )
 {
 	assert( p_state );
-	return p_state->frames;
+	return array_elem( (array_t*) &p_state->frames, index, sprite_frame_t );
 }
 

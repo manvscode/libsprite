@@ -1,9 +1,9 @@
 
 # Add new files in alphabetical order. Thanks.
-libsprite_src = imageio.c texture-packer.c 
+libsprite_src = texture-packer.c sprite.c
 
 # Add new files in alphabetical order. Thanks.
-libsprite_headers = imageio.h texture-packer.h
+libsprite_headers = texture-packer.h sprite.h
 
 library_includedir      = $(includedir)/libsprite/
 library_include_HEADERS = $(libsprite_headers)
@@ -11,5 +11,5 @@ library_include_HEADERS = $(libsprite_headers)
 # Library
 lib_LTLIBRARIES                          = $(top_builddir)/lib/libsprite.la 
 __top_builddir__lib_libsprite_la_SOURCES = $(libsprite_src)
-__top_builddir__lib_libsprite_la_LIBADD  = -lcollections
+__top_builddir__lib_libsprite_la_LIBADD  = -lcollections -limageio
 
