@@ -234,7 +234,6 @@ static inline bool blit( tp_image_t* dst, tp_image_t* src )
 		}
 	}
 
-
 	return true;
 }
 
@@ -244,8 +243,6 @@ static bool tp_blit_tree( tp_image_t* dst, tp_rect_t* root )
 
 	if( !tp_blit_tree( dst, root->children[ TP_CHILD_LEFT ] ) )  return false;
 	if( !tp_blit_tree( dst, root->children[ TP_CHILD_RIGHT ] ) ) return false;
-
-
 
 	if( !blit( dst, root->image ) )
 	{
