@@ -1,23 +1,42 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <assert.h>
 #include <libimageio/blending.h>
 #include "texture-packer.h"
 
 
+
+
+
 #define area( rect ) \
 	((rect)->width * (rect)->height)
 
-//#pragma pack(push, 2)
-struct texture_packer_image {
+typedef struct texture_packer_image {
 	uint16_t x;
 	uint16_t y;
 	uint16_t width;
 	uint16_t height;
 	uint8_t  bytes_per_pixel;
 	uint8_t* pixels;
+	void*    data;
+} tp_image_t;
+
+
+struct texture_packer_rect;
+typedef struct texture_packer_rect tp_rect_t;
+
+struct texture_packer {
+	tp_image_t  final_image;
+	tp_rect_t*  root;
+	size_t      size;
+	size_t      array_size;
+	tp_image_t* images;
+
+	tp_data_packed_fxn  data_packed;
+	tp_data_destroy_fxn data_destroy;
 };
-//#pragma pack(pop)
+
 
 static int tp_image_compare( const void* p_left, const void* p_right )
 {
@@ -37,7 +56,7 @@ enum tp_children {
 	TP_CHILDREN_COUNT
 };
 
-typedef struct texture_packer_rect {
+struct texture_packer_rect {
 	uint16_t x;
 	uint16_t y;
 	uint16_t width;
@@ -45,7 +64,7 @@ typedef struct texture_packer_rect {
 
 	tp_image_t* image;
 	struct texture_packer_rect* children[ TP_CHILDREN_COUNT ];
-} tp_rect_t;
+};
 
 static inline tp_rect_t* tp_rect_create( uint16_t x, uint16_t y, uint16_t width, uint16_t height )
 {
@@ -81,26 +100,35 @@ static inline bool tp_rect_is_contained_within( tp_rect_t* rect, const tp_image_
 	return image->width <= rect->width && image->height <= rect->height;
 }
 
-void tp_rect_assign_image( tp_rect_t* rect, tp_image_t* image )
+void tp_rect_assign_image( tp_t* tp, tp_rect_t* rect, tp_image_t* image )
 {
 	assert( image != NULL );
 	assert( image->pixels != NULL );
 
+	int dw = rect->width - image->width;
+	int dh = rect->height - image->height;
+
 	/* Form a sub-rectangle along the longest edge. */
 	if( image->width < image->height ) /* form rect along height-side */
 	{
-		rect->children[ TP_CHILD_LEFT ]  = tp_rect_create( rect->x + image->width, rect->y, rect->width - image->width, image->height );
-		rect->children[ TP_CHILD_RIGHT ] = tp_rect_create( rect->x, rect->y + image->height, rect->width, rect->height - image->height );
+		rect->children[ TP_CHILD_LEFT ]  = tp_rect_create( rect->x + image->width, rect->y, dw, image->height );
+		rect->children[ TP_CHILD_RIGHT ] = tp_rect_create( rect->x, rect->y + image->height, rect->width, dh == 0 ? rect->height : dh );
 	}
 	else /* imageWidth >= imageHeight */
 	{
-		rect->children[ TP_CHILD_LEFT ]  = tp_rect_create( rect->x, rect->y + image->height, image->width, rect->height - image->height );
-		rect->children[ TP_CHILD_RIGHT ] = tp_rect_create( rect->x + image->width, rect->y, rect->width - image->width, rect->height );
+		rect->children[ TP_CHILD_LEFT ]  = tp_rect_create( rect->x, rect->y + image->height, image->width, dh );
+		rect->children[ TP_CHILD_RIGHT ] = tp_rect_create( rect->x + image->width, rect->y, dw, rect->height );
 	}
 
 	image->x    = rect->x;
 	image->y    = rect->y;
 	rect->image = image;
+
+	if( tp->data_packed )
+	{
+		/* Pass packed image to callback for further processing */
+		tp->data_packed( image->x, image->y, image->width, image->height, image->bytes_per_pixel, image->pixels, image->data );
+	}
 }
 
 static inline unsigned int tp_rect_area( const tp_rect_t* rect )
@@ -112,23 +140,17 @@ static inline unsigned int tp_rect_area( const tp_rect_t* rect )
 /*
  *  ------[ Texture Packer ]-------------------------------
  */
-struct texture_packer {
-	tp_image_t  final_image;
-	tp_rect_t*  root;
-	size_t      size;
-	size_t      array_size;
-	tp_image_t* images;
-};
-
 tp_t* texture_packer_create( void )
 {
 	tp_t* tp = (tp_t*) malloc( sizeof(tp_t) );
 
 	if( tp )
 	{
-		tp->root       = NULL;
-		tp->size       = 0;
-		tp->array_size = 32;
+		tp->root         = NULL;
+		tp->size         = 0;
+		tp->array_size   = 32;
+		tp->data_packed  = NULL;
+		tp->data_destroy = NULL;
 
 		tp->images = (tp_image_t*) malloc( sizeof(tp_image_t) * tp->array_size );
 
@@ -155,7 +177,17 @@ void texture_packer_destroy( tp_t** tp )
 	free( *tp );
 }
 
-bool texture_packer_add( tp_t* tp, uint16_t width, uint16_t height, uint8_t bytes_per_pixel, uint8_t* pixels )
+void texture_packer_data_fxns( tp_t* tp, tp_data_packed_fxn on_packed, tp_data_destroy_fxn on_destroy )
+{
+	assert( tp );
+	assert( on_packed );
+	assert( on_destroy );
+
+	tp->data_packed  = on_packed;
+	tp->data_destroy = on_destroy;
+}
+
+bool texture_packer_add( tp_t* tp, uint16_t width, uint16_t height, uint8_t bytes_per_pixel, const uint8_t* pixels, const void* data )
 {
 	assert( tp );
 
@@ -186,6 +218,7 @@ bool texture_packer_add( tp_t* tp, uint16_t width, uint16_t height, uint8_t byte
 	image->height          = height;
 	image->bytes_per_pixel = bytes_per_pixel;
 	image->pixels          = (uint8_t*) malloc( image_size );
+	image->data            = (void*) data;
 
 	assert( image->pixels != NULL );
 
@@ -208,6 +241,10 @@ void texture_packer_clear( tp_t* tp )
 	for( size_t i = 0; i < tp->size; i++ )
 	{
 		tp_image_t* image = tp->images + i;
+		if( tp->data_destroy )
+		{
+			tp->data_destroy( image->data );
+		}
 		free( image->pixels );
 	}
 
@@ -252,25 +289,25 @@ static bool tp_blit_tree( tp_image_t* dst, tp_rect_t* root )
 	return true;
 }
 
-static inline bool tp_insert_image( tp_rect_t** root, tp_image_t* image )
+static inline bool tp_insert_image( tp_t* tp, tp_rect_t** root, tp_image_t* image )
 {
 	if( tp_rect_is_contained_within( *root, image ) )
 	{
 		if( tp_rect_is_assigned( *root ) )
 		{
-			if( tp_insert_image( &(*root)->children[ TP_CHILD_LEFT ], image ) )
+			if( tp_insert_image( tp, &(*root)->children[ TP_CHILD_LEFT ], image ) )
 			{
 				return true;
 			}
 			else
 			{
-				return tp_insert_image( &(*root)->children[ TP_CHILD_RIGHT ], image );
+				return tp_insert_image( tp, &(*root)->children[ TP_CHILD_RIGHT ], image );
 			}
 
 		}
 		else
 		{
-			tp_rect_assign_image( *root, image );
+			tp_rect_assign_image( tp, *root, image );
 			return true;
 		}
 	}
@@ -284,6 +321,18 @@ static inline void tp_free_tree( tp_rect_t** root )
 
 	tp_free_tree( &(*root)->children[ TP_CHILD_LEFT ] );
 	tp_free_tree( &(*root)->children[ TP_CHILD_RIGHT ] );
+
+	#ifdef TP_DEBUG
+	printf( "rect (x=%d, y=%d, w=%d, h=%d)\n", (*root)->x, (*root)->y, (*root)->width, (*root)->height );
+	#endif
+
+	(*root)->x                          = 0;
+	(*root)->y                          = 0;
+	(*root)->width                      = 0;
+	(*root)->height                     = 0;
+	(*root)->image                      = NULL;
+	(*root)->children[ TP_CHILD_LEFT ]  = NULL;
+	(*root)->children[ TP_CHILD_RIGHT ] = NULL;
 
 	tp_rect_destroy( root );
 }
@@ -321,10 +370,13 @@ bool texture_packer_pack( tp_t* tp, uint16_t width, uint16_t height, uint8_t byt
 	{
 		tp_image_t* image = &tp->images[ i ];
 		assert( image->pixels );
-		bool is_assigned = tp_insert_image( &tp->root, image );
+		bool is_assigned = tp_insert_image( tp, &tp->root, image );
 
 		if( !is_assigned )
 		{
+			#ifdef TP_DEBUG
+			printf( "---------------------------------------------\n");
+			#endif
 			tp_free_tree( &tp->root );
 			return false;
 		}
@@ -333,12 +385,37 @@ bool texture_packer_pack( tp_t* tp, uint16_t width, uint16_t height, uint8_t byt
 	// Use the tree to generate the final texture.
 	if( !tp_blit_tree( &tp->final_image, tp->root ) )
 	{
+		#ifdef TP_DEBUG
+		printf( "---------------------------------------------\n");
+		#endif
 		tp_free_tree( &tp->root );
 		return false;
 	}
 
+	#ifdef TP_DEBUG
+	printf( "---------------------------------------------\n");
+	#endif
 	tp_free_tree( &tp->root );
 	return true;
+}
+
+void texture_packer_fit_and_pack( tp_t* tp, uint8_t bytes_per_pixel )
+{
+	if( tp->size > 0 )
+	{
+		uint16_t width  = tp->images[ 0 ].width;
+		uint16_t height = tp->images[ 0 ].height;
+		//bool increase_width = false;
+
+		while( !texture_packer_pack( tp, width, height, bytes_per_pixel ) )
+		{
+			//if( increase_width ) width  += 1;
+			//else                 height += 1;
+
+			//increase_width = !increase_width;
+			width += 1;
+		}
+	}
 }
 
 uint16_t texture_packer_width( const tp_t* tp )

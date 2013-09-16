@@ -41,10 +41,8 @@ typedef struct sprite_frame {
 } sprite_frame_t;
 
 
-sprite_t*             sprite_create_ex          ( const char* name, bool use_transparency );
-void                  sprite_create             ( sprite_t* p_sprite, const char* name, bool use_transparency );
-void                  sprite_destroy_ex         ( sprite_t** p_sprite );
-void                  sprite_destroy            ( sprite_t* p_sprite );
+sprite_t*             sprite_create             ( const char* name, bool use_transparency );
+void                  sprite_destroy            ( sprite_t** p_sprite );
 
 bool                  sprite_add_state          ( sprite_t* p_sprite, const char* state );
 bool                  sprite_add_frame          ( sprite_t* p_sprite, const char* state, uint16_t x, uint16_t y, uint16_t width, uint16_t height );
@@ -62,16 +60,8 @@ const char*           sprite_state_name         ( const sprite_state_t* p_state 
 uint16_t              sprite_state_frame_count  ( const sprite_state_t* p_state );
 const sprite_frame_t* sprite_state_frame        ( const sprite_state_t* p_state, uint16_t index );
 
-
-bool sprite_load( sprite_t* p_sprite, const char* filename )
-{
-	return true;
-}
-
-bool sprite_save( sprite_t* p_sprite, const char* filename )
-{
-	return true;
-}
+bool                  sprite_load               ( sprite_t* p_sprite, const char* filename );
+bool                  sprite_save               ( sprite_t* p_sprite, const char* filename );
 
 #ifdef __cplusplus
 }
