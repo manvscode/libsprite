@@ -23,7 +23,7 @@ DFLAGS=""
 
 CFLAGS="-std=gnu99 -Wall -pedantic -g -ggdb -O0 $DFLAGS -I/usr/local/include"
 #CFLAGS="-std=gnu99 -Wall -pedantic -O3 -I/usr/local/include"
-LDFLAGS="-limageio -lcollections"
+LDFLAGS="-lutility -limageio -lcollections"
 
 AM_PROG_AR
 

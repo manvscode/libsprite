@@ -24,16 +24,20 @@
 #include <string.h>
 #include <libcollections/array.h>
 #include <libcollections/tree-map.h>
+#include <libutility/utility.h>
 #include "sprite.h"
 
+#define UNKNOWN_NAME       ("<unknown>")
+
 struct sprite_state {
-	uint16_t name_length;
-	char*    name;
-	uint16_t fps;
+	char     name[ SPRITE_MAX_STATE_NAME_LENGTH + 1 ];
+	uint16_t const_time; /* optional. 0 means to ignore and use frame's time */
+	uint16_t loop_count; /* optional, 0 if loops forever */
 	array_t  frames;
 };
 
 struct sprite {
+	char     marker_and_bom[ 4 ]; // "SPR"0
 	uint16_t name_length;
 	char*    name;
 	uint16_t width;
@@ -54,9 +58,11 @@ sprite_state_t* sprite_state_create( const char* name )
 
 	if( p_state )
 	{
-		p_state->name_length = strlen( name );
-		p_state->name        = strdup( name );
-		p_state->fps         = 60;
+		strncpy( p_state->name, name, SPRITE_MAX_STATE_NAME_LENGTH );
+		p_state->name[ SPRITE_MAX_STATE_NAME_LENGTH ] = '\0';
+
+		p_state->const_time  = 0;
+		p_state->loop_count  = 0;
 
 		array_create( &p_state->frames, sizeof(sprite_frame_t), 0, malloc, free );
 	}
@@ -67,17 +73,6 @@ sprite_state_t* sprite_state_create( const char* name )
 void sprite_state_destroy( sprite_state_t* p_state )
 {
 	assert( p_state );
-
-	if( p_state->name )
-	{
-		free( p_state->name );
-		#ifdef SPRITE_DEBUG
-		p_state->name_length = 0;
-		p_state->name        = NULL;
-		p_state->fps         = 0;
-		#endif
-	}
-
 	array_destroy( &p_state->frames );
 	free( p_state );
 }
@@ -111,6 +106,22 @@ sprite_t* sprite_create( const char* name, bool use_transparency )
 void _sprite_create( sprite_t* p_sprite, const char* name, bool use_transparency )
 {
 	assert( p_sprite );
+
+	if( !name || *name == '\0' )
+	{
+		name = "unknown";
+	}
+
+	p_sprite->marker_and_bom[ 0 ] = 'S';
+	p_sprite->marker_and_bom[ 1 ] = 'P';
+	p_sprite->marker_and_bom[ 2 ] = 'R';
+
+	#ifdef SPRITE_USE_MACHINE_ENDIANNESS
+	p_sprite->marker_and_bom[ 3 ] = is_big_endian( );
+	#else
+	p_sprite->marker_and_bom[ 3 ] = 0; /* use little endian encoding */
+	#endif
+
 	p_sprite->name            = strdup( name );
 	p_sprite->name_length     = strlen( name );
 	p_sprite->width           = 0;
@@ -160,6 +171,40 @@ void _sprite_destroy( sprite_t* p_sprite )
 	tree_map_destroy( &p_sprite->states );
 }
 
+void sprite_set_name( sprite_t* p_sprite, const char* name )
+{
+	if( p_sprite->name )
+	{
+		free( p_sprite->name );
+	}
+
+	if( !name || *name == '\0' )
+	{
+		name = "unknown";
+	}
+
+	p_sprite->name        = strdup( name );
+	p_sprite->name_length = strlen( name );
+}
+
+void sprite_set_texture( sprite_t* p_sprite, uint16_t w, uint16_t h, uint16_t bytes_per_pixel, const void* pixels )
+{
+	assert( p_sprite );
+	p_sprite->width           = w;
+	p_sprite->height          = h;
+	p_sprite->bytes_per_pixel = bytes_per_pixel;
+
+	if( p_sprite->pixels )
+	{
+		free( p_sprite->pixels );
+	}
+
+	size_t size = sizeof(uint8_t) * p_sprite->width * p_sprite->height * p_sprite->bytes_per_pixel;
+	p_sprite->pixels = malloc( size );
+	memcpy( p_sprite->pixels, pixels, size );
+}
+
+
 bool sprite_add_state( sprite_t* p_sprite, const char* name )
 {
 	bool result = false;
@@ -174,7 +219,7 @@ bool sprite_add_state( sprite_t* p_sprite, const char* name )
 	return result;
 }
 
-bool sprite_add_frame( sprite_t* p_sprite, const char* state, uint16_t x, uint16_t y, uint16_t width, uint16_t height )
+bool sprite_add_frame( sprite_t* p_sprite, const char* state, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t time )
 {
 	bool result = false;
 
@@ -193,6 +238,7 @@ bool sprite_add_frame( sprite_t* p_sprite, const char* state, uint16_t x, uint16
 			p_frame->y      = y;
 			p_frame->width  = width;
 			p_frame->height = height;
+			p_frame->time   = time;
 
 			result = true;
 		}
@@ -244,7 +290,7 @@ bool sprite_remove_frame( sprite_t* p_sprite, const char* state, uint16_t index 
 
 const char* sprite_name( const sprite_t* p_sprite )
 {
-	return p_sprite && p_sprite->name ? p_sprite->name : "<uninitialized sprite>";
+	return p_sprite && p_sprite->name ? p_sprite->name : UNKNOWN_NAME;
 }
 
 uint16_t sprite_width( const sprite_t* p_sprite )
@@ -283,12 +329,26 @@ const sprite_state_t* sprite_state( const sprite_t* p_sprite, const char* state 
 
 uint8_t sprite_state_count( const sprite_t* p_sprite )
 {
+	assert( p_sprite );
 	return p_sprite ? tree_map_size( &p_sprite->states ) : 0;
 }
 
 const char* sprite_state_name( const sprite_state_t* p_state )
 {
-	return p_state ? p_state->name : "<uninitialized state>";
+	assert( p_state );
+	return p_state ? p_state->name : UNKNOWN_NAME;
+}
+
+uint16_t sprite_state_const_time( const sprite_state_t* p_state )
+{
+	assert( p_state );
+	return p_state->const_time;
+}
+
+uint16_t sprite_state_loop_count( const sprite_state_t* p_state )
+{
+	assert( p_state );
+	return p_state->loop_count;
 }
 
 uint16_t sprite_state_frame_count( const sprite_state_t* p_state )
@@ -303,16 +363,158 @@ const sprite_frame_t* sprite_state_frame( const sprite_state_t* p_state, uint16_
 	return array_elem( (array_t*) &p_state->frames, index, sprite_frame_t );
 }
 
+#define SPRITE_USE_LITTLE_ENDIAN
 
-
-bool sprite_load( sprite_t* p_sprite, const char* filename )
+static inline size_t sprite_writef( void* ptr, size_t size, FILE* file, bool is_big_endian )
 {
-	/* TODO */
-	return true;
+	assert( file );
+	assert( ptr && size > 0 );
+	hton( ptr, size );
+	size_t result = fwrite( ptr, size, 1, file );
+	ntoh( ptr, size );
+
+	return result;
+}
+
+
+static inline size_t sprite_readf( void* ptr, size_t size, FILE* file, bool is_big_endian )
+{
+	assert( file );
+	assert( ptr && size > 0 );
+	ntoh( ptr, size );
+	size_t result = fread( ptr, size, 1, file );
+
+	return result;
+}
+
+
+sprite_t* sprite_from_file( const char* filename )
+{
+	sprite_t* p_sprite = NULL;
+	FILE* file = fopen( filename, "rb" );
+
+	if( !file )
+	{
+		goto failure;
+	}
+
+
+	char marker_and_bom[ 4 ] = { 0 };
+	fread( marker_and_bom, sizeof(char), sizeof(marker_and_bom), file );
+
+	if( marker_and_bom[ 0 ] != 'S' || marker_and_bom[ 1 ] != 'P' || marker_and_bom[ 2 ] != 'R' )
+	{
+		goto failure;
+	}
+
+	bool is_big_endian = marker_and_bom[ 3 ];
+	p_sprite = sprite_create( NULL, true );
+	memcpy( p_sprite->marker_and_bom, marker_and_bom, sizeof(char) * 4 );
+
+
+	sprite_readf( &p_sprite->name_length, sizeof(p_sprite->name_length), file, is_big_endian );
+	p_sprite->name = malloc( sizeof(char) * p_sprite->name_length );
+	fread( p_sprite->name, sizeof(char), p_sprite->name_length + 1, file );
+
+	sprite_readf( &p_sprite->width, sizeof(p_sprite->width), file, is_big_endian );
+	sprite_readf( &p_sprite->height, sizeof(p_sprite->height), file, is_big_endian );
+	fread( &p_sprite->bytes_per_pixel, sizeof(uint8_t), 1, file );
+	p_sprite->pixels = malloc( sizeof(uint8_t) * p_sprite->width * p_sprite->height * p_sprite->bytes_per_pixel );
+	sprite_readf( p_sprite->pixels, sizeof(uint8_t) * p_sprite->width * p_sprite->height * p_sprite->bytes_per_pixel, file, is_big_endian );
+
+	uint16_t state_count = 0;
+	sprite_readf( &state_count, sizeof(state_count), file, is_big_endian );
+
+	while( state_count-- > 0 )
+	{
+		sprite_state_t* state = sprite_state_create( UNKNOWN_NAME );
+
+
+		fread( state->name, sizeof(char), SPRITE_MAX_STATE_NAME_LENGTH + 1, file );
+		sprite_readf( &state->const_time, sizeof(state->const_time), file, is_big_endian );
+		sprite_readf( &state->loop_count, sizeof(state->loop_count), file, is_big_endian );
+
+		tree_map_insert( &p_sprite->states, state->name, state );
+
+		uint16_t frame_count = 0;
+		sprite_readf( &frame_count, sizeof(frame_count), file, is_big_endian );
+
+
+		while( frame_count-- > 0 )
+		{
+			uint16_t x = 0;
+			uint16_t y = 0;
+			uint16_t width = 0;
+			uint16_t height = 0;
+			uint16_t time = 0;
+
+			sprite_readf( &x, sizeof(x), file, is_big_endian );
+			sprite_readf( &y, sizeof(y), file, is_big_endian );
+			sprite_readf( &width, sizeof(width), file, is_big_endian );
+			sprite_readf( &height, sizeof(height), file, is_big_endian );
+			sprite_readf( &time, sizeof(time), file, is_big_endian );
+
+			sprite_add_frame( p_sprite, state->name, x, y, width, height, time );
+		}
+	}
+
+	return p_sprite;
+
+failure:
+	if( p_sprite ) sprite_destroy( &p_sprite );
+	return NULL;
 }
 
 bool sprite_save( sprite_t* p_sprite, const char* filename )
 {
-	/* TODO */
+	FILE* file = fopen( filename, "wb" );
+
+	if( !file )
+	{
+		return false;
+	}
+
+	bool is_big_endian = p_sprite->marker_and_bom[ 3 ];
+
+	fwrite( p_sprite->marker_and_bom, sizeof(char), sizeof(p_sprite->marker_and_bom), file );
+
+	sprite_writef( &p_sprite->name_length, sizeof(p_sprite->name_length), file, is_big_endian );
+	fwrite( p_sprite->name, sizeof(char), p_sprite->name_length + 1, file );
+	sprite_writef( &p_sprite->width, sizeof(p_sprite->width), file, is_big_endian );
+	sprite_writef( &p_sprite->height, sizeof(p_sprite->height), file, is_big_endian );
+	fwrite( &p_sprite->bytes_per_pixel, sizeof(uint8_t), 1, file );
+	sprite_writef( p_sprite->pixels, sizeof(uint8_t) * p_sprite->width * p_sprite->height * p_sprite->bytes_per_pixel, file, is_big_endian );
+
+	uint16_t state_count = tree_map_size( &p_sprite->states );
+	sprite_writef( &state_count, sizeof(state_count), file, is_big_endian );
+
+	tree_map_iterator_t itr;
+	for( itr = tree_map_begin(&p_sprite->states);
+	     itr != tree_map_end( );
+	     itr = tree_map_next(itr) )
+	{
+		sprite_state_t* state = itr->value;
+
+		fwrite( state->name, sizeof(char), SPRITE_MAX_STATE_NAME_LENGTH + 1, file );
+		sprite_writef( &state->const_time, sizeof(state->const_time), file, is_big_endian );
+		sprite_writef( &state->loop_count, sizeof(state->loop_count), file, is_big_endian );
+
+		uint16_t frame_count = array_size( &state->frames );
+		sprite_writef( &frame_count, sizeof(frame_count), file, is_big_endian );
+
+
+		for( size_t i = 0; i < frame_count; i++ )
+		{
+			sprite_frame_t* frame = (sprite_frame_t*) array_element( &state->frames, i );
+
+			sprite_writef( &frame->x, sizeof(frame->x), file, is_big_endian );
+			sprite_writef( &frame->y, sizeof(frame->y), file, is_big_endian );
+			sprite_writef( &frame->width, sizeof(frame->width), file, is_big_endian );
+			sprite_writef( &frame->height, sizeof(frame->height), file, is_big_endian );
+			sprite_writef( &frame->time, sizeof(frame->time), file, is_big_endian );
+		}
+	}
+
+	fclose( file );
 	return true;
 }

@@ -83,7 +83,7 @@ void on_packed_image( uint16_t x, uint16_t y, uint16_t width, uint16_t height, u
 		sprite_add_state( sprite_info->sprite, sprite_info->state );
 	}
 
-	sprite_add_frame( sprite_info->sprite, sprite_info->state, x, y, width, height );
+	sprite_add_frame( sprite_info->sprite, sprite_info->state, x, y, width, height, 16 /* 16ms for 60 fps */ );
 }
 
 
