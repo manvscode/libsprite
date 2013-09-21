@@ -25,8 +25,9 @@
 #include <assert.h>
 #include <getopt.h>
 #include <libimageio/imageio.h>
-#include <texture-packer.h>
-#include <sprite.h>
+#include <libutility/utility.h>
+#include "../src/texture-packer.h"
+#include "../src/sprite.h"
 
 typedef struct sprite_info {
 	sprite_t* sprite;
@@ -34,12 +35,13 @@ typedef struct sprite_info {
 	size_t    frame_idx;
 } sprite_info_t;
 
-static void              on_packed_image  ( uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint8_t bytes_per_pixel, uint8_t* pixels, void* data );
+static void           on_packed_image     ( uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint8_t bytes_per_pixel, uint8_t* pixels, void* data );
+static void           on_cleared_image    ( void* data );
 static sprite_info_t* sprite_info_create  ( sprite_t* sprite, const char* state, size_t idx );
 static void           sprite_info_destroy ( sprite_info_t* si );
 
 static void help( void );
-static void info( const sprite_t* sprite );
+static void info( sprite_t* sprite );
 static void add( sprite_t* sprite, const char* state, const char* image );
 
 
@@ -50,7 +52,7 @@ struct {
 	const char* state;
 	uint8_t time;
 	uint16_t frame_count_for_state;
-} sprite_compiler = { NULL, NULL, false, NULL, 16, 0 };
+} sprite_compiler = { NULL, NULL, false, NULL, 70, 0 };
 
 static struct option long_options[] =
 {
@@ -61,6 +63,7 @@ static struct option long_options[] =
 	{"info",    no_argument,       0, 'i'},
 	{"export",  no_argument,       0, 'x'},
 
+	{"time",    required_argument, 0, 't'},
 	{"add",     required_argument, 0, 'a'},
 	{"delete",  required_argument, 0, 'd'},
 
@@ -84,7 +87,7 @@ int main( int argc, char* argv[] )
 	int opt;
 	int opt_idx;
 
-	while( (opt = getopt_long(argc, argv, "vhixc:f:a:", long_options, &opt_idx)) != -1 )
+	while( (opt = getopt_long(argc, argv, "vhixc:f:a:t:", long_options, &opt_idx)) != -1 )
 	{
 		switch( opt )
 		{
@@ -100,12 +103,18 @@ int main( int argc, char* argv[] )
 			case 'i':
 				info( sprite_compiler.sprite );
 				break;
+			case 't':
+				sprite_compiler.time = atoi( optarg );
+				break;
 			case 'a':
 			{
-				char* comma = strchr( optarg, ',' );
-				const char* image = comma + 1;
+				char* comma = strchr( optarg, ':' );
+				char* image = comma + 1;
 				*comma = '\0';
-				const char* state = optarg;
+				char* state = optarg;
+
+				string_trim( image, "\n\r\t " );
+				string_trim( state, "\n\r\t " );
 
 				add( sprite_compiler.sprite, state, image );
 				break;
@@ -119,7 +128,7 @@ int main( int argc, char* argv[] )
 
 				uint16_t width           = texture_packer_width( sprite_compiler.tp );
 				uint16_t height          = texture_packer_height( sprite_compiler.tp );
-				uint16_t bytes_per_pixel = texture_packer_bpp( sprite_compiler.tp );
+				uint16_t bytes_per_pixel = texture_packer_bytes_per_pixel( sprite_compiler.tp );
 				const void* pixels       = texture_packer_pixels( sprite_compiler.tp );
 
 				sprite_set_texture( sprite_compiler.sprite, width, height, bytes_per_pixel, pixels );
@@ -180,6 +189,17 @@ void on_packed_image( uint16_t x, uint16_t y, uint16_t width, uint16_t height, u
 	sprite_add_frame( sprite_info->sprite, sprite_info->state, x, y, width, height, time );
 }
 
+void on_cleared_image( void* data )
+{
+	sprite_info_t* sprite_info = data;
+
+	printf( "Removing a frame from '%s'\n", sprite_info->state );
+
+	//if( sprite_state_count(sprite_info->sprite) > 0 && sprite_state_frame_count(sprite_info->sprite, sprite_info->state) > 0 )
+	{
+		//sprite_remove_frame( sprite_info->sprite, sprite_info->state, 0 );
+	}
+}
 
 sprite_info_t* sprite_info_create( sprite_t* sprite, const char* state, size_t idx )
 {
@@ -218,16 +238,58 @@ void help( void )
 	{
 		printf( "  -%c, --%-12s %-s\n", 'h', "help",   "Get help on how to use this program." );
 		printf( "  -%c, --%-12s %-s\n", 'c', "create", "Create a new sprite." );
+		printf( "  -%c, --%-12s %-s\n", 't', "time",   "Set the frame time." );
 	}
 
 	printf( "----------------------------------------------------\n" );
 }
 
-void info( const sprite_t* sprite )
+void info( sprite_t* sprite )
 {
 	printf( "----[ Sprite Info ]-----------------------------\n" );
-	printf( "Name: %40s\n", sprite_name( sprite ) );
-	printf( "Width: %10d  Height: %10d  Bit Depth: %dbpp\n", sprite_width(sprite), sprite_height(sprite), sprite_bytes_per_pixel(sprite) == 4 ? 32 : 24 );
+	printf( "Name: %-40s\n", sprite_name( sprite ) );
+	printf( "Width: %-6d  Height: %-6d  Bit Depth: %-dbpp\n", sprite_width(sprite), sprite_height(sprite), sprite_bytes_per_pixel(sprite) == 4 ? 32 : 24 );
+	printf( "Number of States: %6d\n", sprite_state_count(sprite) );
+	printf( "----[ States ]---------------------------------\n" );
+	const sprite_state_t* state = sprite_first_state( sprite );
+
+	while( state )
+	{
+		printf( "Name: \"%-s\"  ", sprite_state_name(state) );
+
+		if( sprite_state_loop_count(state) > 0 )
+		{
+			printf( "Loop Count: %-3d  ", sprite_state_loop_count(state) );
+		}
+		else
+		{
+			printf( "Loop Count: Infinite  " );
+		}
+
+		if( sprite_state_const_time(state) > 0 )
+		{
+			printf( "Constant Time: %-3d\n", sprite_state_const_time(state) );
+		}
+		else
+		{
+			printf( "Constant Time: Unused\n" );
+		}
+
+		for( size_t i = 0; i < sprite_state_frame_count( state ); i++ )
+		{
+			const sprite_frame_t* frame = sprite_state_frame( state, i );
+
+			printf( "        |\n" );
+
+			printf( "        +--- Frame %2zd: [x:%3d, y:%3d, W:%3d, H:%3d] @ %dms\n", i, frame->x, frame->y, frame->width, frame->height, frame->time );
+		}
+
+		printf( "\n" );
+
+		state = sprite_next_state( sprite );
+	}
+	printf( "------------------------------------------------\n" );
+
 
 }
 
@@ -235,7 +297,7 @@ void add( sprite_t* sprite, const char* state, const char* filename )
 {
 	printf( "Added %s to state '%s'\n", filename, state );
 
-	const char* extension = strchr( filename, '.' );
+	const char* extension = strrchr( filename, '.' );
 	image_file_format_t format = PNG;
 	image_t image;
 
@@ -245,19 +307,19 @@ void add( sprite_t* sprite, const char* state, const char* filename )
 
 		if( strcasecmp( "png", extension ) == 0 )
 		{
-			format = PNG;
+			format = IMAGEIO_PNG;
 		}
 		else if( strcasecmp( "bmp", extension ) == 0 )
 		{
-			format = BMP;
+			format = IMAGEIO_BMP;
 		}
 		else if( strcasecmp( "tga", extension ) == 0 )
 		{
-			format = TGA;
+			format = IMAGEIO_TGA;
 		}
 	}
 
-	imageio_image_load( &image, filename, TGA );
+	imageio_image_load( &image, filename, format );
 
 	texture_packer_add( sprite_compiler.tp, image.width, image.height, image.bits_per_pixel / 8, image.pixels, sprite_info_create(sprite, state, sprite_compiler.frame_count_for_state) );
 	sprite_compiler.frame_count_for_state++;

@@ -1,4 +1,8 @@
-libsprite
-=========
+libimageio
+=============
 
-Library for 2D sprites.
+A simple library for loading and saving BMP, TGA, and PNG images.
+
+Dependecies
+=============
+* libpng

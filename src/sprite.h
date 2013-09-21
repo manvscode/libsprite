@@ -53,15 +53,19 @@ void                  sprite_set_name           ( sprite_t* p_sprite, const char
 void                  sprite_set_texture        ( sprite_t* p_sprite, uint16_t w, uint16_t h, uint16_t bytes_per_pixel, const void* pixels );
 bool                  sprite_add_state          ( sprite_t* p_sprite, const char* state );
 bool                  sprite_add_frame          ( sprite_t* p_sprite, const char* state, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t time );
+void                  sprite_remove_all_states  ( sprite_t* p_sprite );
 bool                  sprite_remove_state       ( sprite_t* p_sprite, const char* state );
 bool                  sprite_remove_frame       ( sprite_t* p_sprite, const char* state, uint16_t index );
 
 const char*           sprite_name               ( const sprite_t* p_sprite );
 uint16_t              sprite_width              ( const sprite_t* p_sprite );
 uint16_t              sprite_height             ( const sprite_t* p_sprite );
+uint16_t              sprite_bit_depth          ( const sprite_t* p_sprite );
 uint16_t              sprite_bytes_per_pixel    ( const sprite_t* p_sprite );
 const void*           sprite_pixels             ( const sprite_t* p_sprite );
 const sprite_state_t* sprite_state              ( const sprite_t* p_sprite, const char* state );
+const sprite_state_t* sprite_first_state        ( sprite_t* p_sprite );
+const sprite_state_t* sprite_next_state         ( sprite_t* p_sprite );
 uint8_t               sprite_state_count        ( const sprite_t* p_sprite );
 const char*           sprite_state_name         ( const sprite_state_t* p_state );
 uint16_t              sprite_state_const_time   ( const sprite_state_t* p_state );

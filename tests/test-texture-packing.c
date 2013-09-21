@@ -33,7 +33,7 @@ typedef struct sprite_info {
 	size_t    frame_idx;
 } sprite_info_t;
 
-static void              on_packed_image  ( uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint8_t bytes_per_pixel, uint8_t* pixels, void* data );
+static void           on_packed_image     ( uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint8_t bytes_per_pixel, uint8_t* pixels, void* data );
 static sprite_info_t* sprite_info_create  ( sprite_t* sprite, const char* state, size_t idx );
 static void           sprite_info_destroy ( sprite_info_t* si );
 
@@ -42,9 +42,15 @@ static void           sprite_info_destroy ( sprite_info_t* si );
 int main( int argc, char* argv[] )
 {
 	image_t image1;
-	imageio_image_load( &image1, "/Users/manvscode/projects/libsprite/bin/troll.tga", TGA );
+	assert( imageio_image_load( &image1, "/Users/manvscode/projects/libsprite/bin/troll.tga", IMAGEIO_TGA ) );
 	image_t image2;
-	imageio_image_load( &image2, "/Users/manvscode/projects/libsprite/bin/warrior.tga", TGA );
+	assert( imageio_image_load( &image2, "/Users/manvscode/projects/libsprite/bin/warrior.tga", IMAGEIO_TGA ) );
+	image_t image3;
+	assert( imageio_image_load( &image3, "/Users/manvscode/projects/libsprite/bin/black-knight.png", IMAGEIO_PNG ) );
+	imageio_flip_vertically( image3.width, image3.height, image3.bits_per_pixel / 8, image3.pixels );
+	image_t image4;
+	assert( imageio_image_load( &image4, "/Users/manvscode/projects/libsprite/bin/king.png", IMAGEIO_PNG ) );
+	imageio_flip_vertically( image4.width, image4.height, image4.bits_per_pixel / 8, image4.pixels );
 
 
 	sprite_t* sprite = sprite_create( "Test Sprite", true /*uses RGBA*/ );
@@ -54,18 +60,28 @@ int main( int argc, char* argv[] )
 
 	texture_packer_add( tp, image1.width, image1.height, image1.bits_per_pixel / 8, image1.pixels, sprite_info_create(sprite, "idle", 0) );
 	texture_packer_add( tp, image2.width, image2.height, image2.bits_per_pixel / 8, image2.pixels, sprite_info_create(sprite, "idle", 1) );
+	texture_packer_add( tp, image3.width, image3.height, image3.bits_per_pixel / 8, image3.pixels, sprite_info_create(sprite, "idle", 2) );
+	texture_packer_add( tp, image4.width, image4.height, image4.bits_per_pixel / 8, image4.pixels, sprite_info_create(sprite, "idle", 3) );
 
 	texture_packer_fit_and_pack( tp, 4 );
 
 	image_t dstImage;
 	dstImage.width          = texture_packer_width( tp );
 	dstImage.height         = texture_packer_height( tp );
-	dstImage.bits_per_pixel = texture_packer_bpp( tp ) * 8;
+	dstImage.bits_per_pixel = texture_packer_bytes_per_pixel( tp ) * 8;
 	dstImage.pixels         = texture_packer_pixels( tp );
 
-	imageio_image_save( &dstImage, "/Users/manvscode/projects/libsprite/bin/output.tga", TGA );
+	imageio_image_save( &dstImage, "/Users/manvscode/projects/libsprite/bin/test-output.tga", IMAGEIO_TGA );
+
+
+	sprite_set_texture( sprite, dstImage.width, dstImage.height, dstImage.bits_per_pixel / 8, dstImage.pixels );
+	sprite_save( sprite, "/Users/manvscode/projects/libsprite/bin/test.spr" );
 	texture_packer_destroy ( &tp );
 
+	imageio_image_destroy( &image1 );
+	imageio_image_destroy( &image2 );
+	imageio_image_destroy( &image3 );
+	imageio_image_destroy( &image4 );
 	return 0;
 }
 
@@ -80,9 +96,11 @@ void on_packed_image( uint16_t x, uint16_t y, uint16_t width, uint16_t height, u
 		/* if this is the first frame being added for this state
 		 * then we need to add the state first.
 		 */
+		printf( "[Texture Packer] Adding state, '%s'\n", sprite_info->state );
 		sprite_add_state( sprite_info->sprite, sprite_info->state );
 	}
 
+	printf( "[Texture Packer] Adding frame to '%s', %dx%d at (%d, %d)\n", sprite_info->state, width, height, x, y );
 	sprite_add_frame( sprite_info->sprite, sprite_info->state, x, y, width, height, 16 /* 16ms for 60 fps */ );
 }
 
@@ -108,7 +126,6 @@ void sprite_info_destroy( sprite_info_t* si )
 {
 	if( si )
 	{
-		free( si->state );
 		free( si );
 	}
 }
