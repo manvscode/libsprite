@@ -13,6 +13,7 @@ in vec2 f_tex_coord;
 in vec4 f_color;
 uniform sampler2D u_texture;
 uniform sprite_frame u_sprite_frame;
+uniform int u_orientation;
 out vec4 color;
 
 

@@ -23,7 +23,7 @@ DFLAGS="-D DEBUG_SPRITE -D DEBUG_TEXTURE_PACKER"
 
 CFLAGS="-std=gnu99 -Wall -pedantic -g -ggdb -O0 $DFLAGS -I/usr/local/include"
 #CFLAGS="-std=gnu99 -Wall -pedantic -O3 -I/usr/local/include"
-LDFLAGS="-lutility -limageio -lcollections"
+LDFLAGS="-lutility -limageio -lcollections -lsimplegl -lSDL2"
 
 AM_PROG_AR
 

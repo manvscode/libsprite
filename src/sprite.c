@@ -341,7 +341,7 @@ const void* sprite_pixels( const sprite_t* p_sprite )
 	return p_sprite ? p_sprite->pixels : NULL;
 }
 
-const sprite_state_t* sprite_state( const sprite_t* p_sprite, const char* state )
+sprite_state_t* sprite_state( const sprite_t* p_sprite, const char* state )
 {
 	if( p_sprite && state )
 	{
@@ -355,7 +355,7 @@ const sprite_state_t* sprite_state( const sprite_t* p_sprite, const char* state 
 	return NULL;
 }
 
-const sprite_state_t* sprite_first_state( sprite_t* p_sprite )
+sprite_state_t* sprite_first_state( sprite_t* p_sprite )
 {
 	if( p_sprite && sprite_state_count(p_sprite) > 0 )
 	{
@@ -370,7 +370,7 @@ const sprite_state_t* sprite_first_state( sprite_t* p_sprite )
 	return NULL;
 }
 
-const sprite_state_t* sprite_next_state( sprite_t* p_sprite )
+sprite_state_t* sprite_next_state( sprite_t* p_sprite )
 {
 	if( p_sprite && p_sprite->state_itr )
 	{
@@ -407,6 +407,47 @@ uint16_t sprite_state_loop_count( const sprite_state_t* p_state )
 {
 	assert( p_state );
 	return p_state->loop_count;
+}
+
+void sprite_state_set_name( sprite_state_t* p_state, const char* name )
+{
+	assert( p_state );
+	strcpy( p_state->name, name );
+}
+
+void sprite_state_set_const_time( sprite_state_t* p_state, uint16_t time )
+{
+	assert( p_state );
+	p_state->const_time = time;
+}
+
+void sprite_state_set_loop_count( sprite_state_t* p_state, uint16_t loop_count )
+{
+	assert( p_state );
+	p_state->loop_count = loop_count;
+}
+
+bool sprite_state_add_frame( sprite_state_t* p_state, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t time )
+{
+	bool result = false;
+
+	if( p_state )
+	{
+		size_t new_array_size = array_size(&p_state->frames) + 1;
+		array_resize( &p_state->frames, new_array_size );
+
+		sprite_frame_t* p_frame = array_elem( &p_state->frames, new_array_size - 1, sprite_frame_t );
+
+		p_frame->x      = x;
+		p_frame->y      = y;
+		p_frame->width  = width;
+		p_frame->height = height;
+		p_frame->time   = time;
+
+		result = true;
+	}
+
+	return result;
 }
 
 uint16_t sprite_state_frame_count( const sprite_state_t* p_state )

@@ -24,11 +24,14 @@
 #include <SDL2/SDL.h>
 #include <libsimplegl/simplegl.h>
 #include "../src/sprite.h"
+#include "../src/sprite-state-machine.h"
 
 static void initialize     ( void );
 static void deinitialize   ( void );
 static void render         ( void );
 static void dump_sdl_error ( void );
+static void handle_event   ( const SDL_Event* e );
+static void sprite_render  ( const sprite_frame_t* frame );
 
 SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
@@ -46,9 +49,9 @@ GLint uniform_texture      = -1;
 GLint uniform_sprite_frame_position = -1;
 GLint uniform_sprite_frame_frame_dimensions = -1;
 GLint uniform_sprite_frame_texture_dimensions = -1;
+GLint uniform_orientation  = 1;
 GLuint texture             =  0;
-
-sprite_t* sprite = NULL;
+uint32_t delta = 0;
 
 
 static GLfloat sprite_mesh[] = {
@@ -69,10 +72,24 @@ static GLfloat sprite_uvs[] = {
 	1.0f, 1.0f,
 };
 
+static bool exiting = false;
+
+
+typedef struct entity {
+	sprite_t* sprite;
+	sprite_state_machine_t ssm;
+
+	int orientation;
+	vec3_t position;
+} entity_t;
+
+
+
+entity_t robot;
 
 int main( int argc, char* argv[] )
 {
-	if( SDL_Init(SDL_INIT_VIDEO) < 0 )
+	if( SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO) < 0 )
 	{
 		goto quit;
 	}
@@ -108,9 +125,10 @@ int main( int argc, char* argv[] )
 
 	SDL_Event e;
 
-	while( e.type != SDL_KEYDOWN && e.type != SDL_QUIT )
+	while( !exiting )
 	{
 		SDL_PollEvent( &e );      // Check for events.
+		handle_event( &e );
 		render( );
 	}
 
@@ -124,9 +142,71 @@ quit:
 	return 0;
 }
 
+void handle_event( const SDL_Event* e )
+{
+	switch( e->type )
+	{
+		case SDL_KEYDOWN:
+		{
+			uint16_t scancode = e->key.keysym.scancode;
+			switch( scancode )
+			{
+				case SDL_SCANCODE_ESCAPE:
+					exiting = true;
+					break;
+				case SDL_SCANCODE_W:
+					sprite_state_machine_transition( &robot.ssm, "jump" );
+					break;
+				case SDL_SCANCODE_S:
+					break;
+				case SDL_SCANCODE_A:
+					robot.orientation = -1;
+					robot.position.x += -0.007f * delta;
+
+					if( e->key.keysym.mod & KMOD_LSHIFT )
+					{
+						sprite_state_machine_transition( &robot.ssm, "run" );
+					}
+					else
+					{
+						sprite_state_machine_transition( &robot.ssm, "walk" );
+					}
+					break;
+				case SDL_SCANCODE_D:
+					robot.orientation = 1;
+					robot.position.x += 0.007f * delta;
+					if( e->key.keysym.mod & KMOD_LSHIFT )
+					{
+						sprite_state_machine_transition( &robot.ssm, "run" );
+					}
+					else
+					{
+						sprite_state_machine_transition( &robot.ssm, "walk" );
+					}
+					break;
+				case SDLK_SPACE:
+					sprite_state_machine_transition( &robot.ssm, "jump" );
+					break;
+				default:
+					break;
+			}
+			break;
+		}
+		case SDL_QUIT:
+			break;
+		default:
+			break;
+	}
+}
+
 void initialize( void )
 {
-	sprite = sprite_from_file( "./tests/robot.spr" );
+	robot.sprite = sprite_from_file( "./tests/robot.spr" );
+	robot.orientation = 1;
+	robot.position.x = 0;
+	robot.position.y = 0;
+	robot.position.z = 0;
+	sprite_state_machine_initialize( &robot.ssm, robot.sprite, "idle", sprite_render );
 	dump_gl_info( );
 	glClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
 
@@ -148,7 +228,7 @@ void initialize( void )
 	if( texture )
 	{
 		glActiveTexture( GL_TEXTURE0 );
-		tex2d_setup_texture ( texture, sprite_width(sprite), sprite_height(sprite), sprite_bit_depth(sprite), sprite_pixels(sprite), GL_NEAREST, GL_NEAREST, true );
+		tex2d_setup_texture ( texture, sprite_width(robot.sprite), sprite_height(robot.sprite), sprite_bit_depth(robot.sprite), sprite_pixels(robot.sprite), GL_LINEAR, GL_LINEAR, true );
 		GL_ASSERT_NO_ERROR( );
 	}
 
@@ -186,6 +266,7 @@ void initialize( void )
 	uniform_sprite_frame_position           = glsl_bind_uniform( program, "u_sprite_frame.position" );
 	uniform_sprite_frame_frame_dimensions   = glsl_bind_uniform( program, "u_sprite_frame.frame_dimensions" );
 	uniform_sprite_frame_texture_dimensions = glsl_bind_uniform( program, "u_sprite_frame.texture_dimensions" );
+	uniform_orientation                     = glsl_bind_uniform( program, "u_orientation" );
 	assert( uniform_sprite_frame_texture_dimensions  >= 0 );
 
 
@@ -231,27 +312,23 @@ void deinitialize( void )
 	glDeleteBuffers( 1, &vbo_vertices );
 	glDeleteBuffers( 1, &vbo_tex_coords );
 	glDeleteProgram( program );
-	sprite_destroy( &sprite );
+	sprite_destroy( &robot.sprite );
 }
 
 void render( )
 {
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT );
-
-	static float angle = 0.0;
-	if( angle >= 360.0f ) angle = 0.0f;
-
-	int width; int height;
-	SDL_GetWindowSize( window, &width, &height );
-	GLfloat aspect = ((GLfloat)width) / height;
-	vec3_t translation = VEC3_VECTOR( 0.0, 0.0, -10 );
-	mat4_t projection = orthographic( -3.0*aspect, 3.0*aspect, -3.0, 3.0, -10.0, 10.0 );
-	mat4_t rotation = rotate_xyz( "yx", angle, 0.0 );
-	mat4_t transform = translate( &translation );
-	transform = mat4_mult_matrix( &transform, &rotation );
-	mat4_t model_view = mat4_mult_matrix( &projection, &transform );
+	uint32_t now = SDL_GetTicks( );
+	static uint32_t last_render = 0;
 
 
+
+
+	/* render the sprite */
+	sprite_state_machine_render( &robot.ssm );
+
+
+	#if 0
 	glUseProgram( program );
 
 	glEnableVertexAttribArray( attribute_vertex );
@@ -301,11 +378,13 @@ void render( )
 	glDisableVertexAttribArray( attribute_tex_coord );
 
 	SDL_Delay( frame->time );
-
+	frame_index++;
+	#endif
 
 	SDL_GL_SwapWindow( window );
 
-	frame_index++;
+	delta = now - last_render;
+	last_render = now;
 }
 
 void dump_sdl_error( void )
@@ -316,4 +395,39 @@ void dump_sdl_error( void )
 	{
 		fprintf( stderr, "[SDL] %s\n", sdl_error );
 	}
+}
+
+void sprite_render( const sprite_frame_t* frame )
+{
+
+	int width; int height;
+	SDL_GetWindowSize( window, &width, &height );
+	GLfloat aspect = ((GLfloat)width) / height;
+	vec3_t translation = VEC3_VECTOR( 0.0, 0.0, -10 );
+	mat4_t projection = orthographic( -3.0*aspect, 3.0*aspect, -3.0, 3.0, -10.0, 10.0 );
+
+	mat4_t transform = MAT4_IDENTITY;// ;translate( &translation );
+	mat4_t position = translate( &robot.position );
+	transform = mat4_mult_matrix( &transform, &position );
+	mat4_t model_view = mat4_mult_matrix( &projection, &transform );
+
+
+	glUseProgram( program );
+
+	glEnableVertexAttribArray( attribute_vertex );
+	glEnableVertexAttribArray( attribute_tex_coord );
+	glUniformMatrix4fv( uniform_model_view, 1, GL_FALSE, model_view.m );
+	glUniform1ui( uniform_texture, texture );
+
+	glUniform2f( uniform_sprite_frame_position, frame->x, frame->y );
+	glUniform2f( uniform_sprite_frame_frame_dimensions, frame->width, frame->height );
+	glUniform2f( uniform_sprite_frame_texture_dimensions, sprite_width(robot.sprite), sprite_height(robot.sprite) );
+	glUniform1i( uniform_orientation, robot.orientation );
+
+	glBindTexture( GL_TEXTURE_2D, texture );
+	glBindVertexArray( vao );
+	glDrawArrays( GL_TRIANGLES, 0, sizeof(sprite_mesh) / sizeof(sprite_mesh[0]) );
+
+	glDisableVertexAttribArray( attribute_vertex );
+	glDisableVertexAttribArray( attribute_tex_coord );
 }

@@ -153,6 +153,13 @@ tp_t* texture_packer_create( void )
 
 		tp->images = (tp_image_t*) malloc( sizeof(tp_image_t) * tp->array_size );
 
+		tp->final_image.x               = 0;
+		tp->final_image.y               = 0;
+		tp->final_image.width           = 0;
+		tp->final_image.height          = 0;
+		tp->final_image.bytes_per_pixel = 0;
+		tp->final_image.pixels          = NULL;
+
 		if( !tp->images )
 		{
 			free( tp );
@@ -337,7 +344,6 @@ static inline void tp_free_tree( tp_rect_t** root )
 	if( *root == NULL ) return;
 
 	tp_free_tree( &(*root)->children[ TP_CHILD_LEFT ] );
-	tp_free_tree( &(*root)->children[ TP_CHILD_RIGHT ] );
 
 	(*root)->x                          = 0;
 	(*root)->y                          = 0;
