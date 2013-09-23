@@ -81,6 +81,7 @@ typedef struct entity {
 
 	int orientation;
 	vec3_t position;
+	vec2_t speed;
 } entity_t;
 
 
@@ -102,7 +103,7 @@ int main( int argc, char* argv[] )
 	SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 24 );
 
 	int flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
-	//flags |= SDL_WINDOW_FULLSCREEN;
+	flags |= SDL_WINDOW_FULLSCREEN;
 	window = SDL_CreateWindow( "Test Shaders", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 480, flags );
 
 	renderer = SDLCALL SDL_CreateRenderer( window, -1, SDL_RENDERER_ACCELERATED );
@@ -148,41 +149,46 @@ void handle_event( const SDL_Event* e )
 	{
 		case SDL_KEYDOWN:
 		{
-			uint16_t scancode = e->key.keysym.scancode;
-			switch( scancode )
+			uint16_t key = e->key.keysym.sym;
+			switch( key )
 			{
-				case SDL_SCANCODE_ESCAPE:
+    			case SDLK_ESCAPE:
 					exiting = true;
 					break;
-				case SDL_SCANCODE_W:
-					sprite_state_machine_transition( &robot.ssm, "jump" );
+    			case SDLK_w:
+					sprite_state_machine_transition( &robot.ssm, "climb" );
 					break;
-				case SDL_SCANCODE_S:
+    			case SDLK_s:
 					break;
-				case SDL_SCANCODE_A:
+    			case SDLK_a:
 					robot.orientation = -1;
-					robot.position.x += -0.007f * delta;
 
 					if( e->key.keysym.mod & KMOD_LSHIFT )
 					{
+						robot.speed.x = 0.01f;
 						sprite_state_machine_transition( &robot.ssm, "run" );
 					}
 					else
 					{
+						robot.speed.x = 0.006f;
 						sprite_state_machine_transition( &robot.ssm, "walk" );
 					}
+					robot.position.x -= robot.speed.x * delta;
 					break;
-				case SDL_SCANCODE_D:
+    			case SDLK_d:
 					robot.orientation = 1;
-					robot.position.x += 0.007f * delta;
+
 					if( e->key.keysym.mod & KMOD_LSHIFT )
 					{
+						robot.speed.x = 0.01f;
 						sprite_state_machine_transition( &robot.ssm, "run" );
 					}
 					else
 					{
+						robot.speed.x = 0.006f;
 						sprite_state_machine_transition( &robot.ssm, "walk" );
 					}
+					robot.position.x += robot.speed.x * delta;
 					break;
 				case SDLK_SPACE:
 					sprite_state_machine_transition( &robot.ssm, "jump" );
@@ -206,6 +212,8 @@ void initialize( void )
 	robot.position.x = 0;
 	robot.position.y = 0;
 	robot.position.z = 0;
+	robot.speed.x = 0.0065f;
+	robot.speed.y = 0.0065f;
 	sprite_state_machine_initialize( &robot.ssm, robot.sprite, "idle", sprite_render );
 	dump_gl_info( );
 	glClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
@@ -321,65 +329,8 @@ void render( )
 	uint32_t now = SDL_GetTicks( );
 	static uint32_t last_render = 0;
 
-
-
-
 	/* render the sprite */
 	sprite_state_machine_render( &robot.ssm );
-
-
-	#if 0
-	glUseProgram( program );
-
-	glEnableVertexAttribArray( attribute_vertex );
-	glEnableVertexAttribArray( attribute_tex_coord );
-	glUniformMatrix4fv( uniform_model_view, 1, GL_FALSE, model_view.m );
-	glUniform1ui( uniform_texture, texture );
-
-	static size_t state_index = 2;
-	const char* state_names[] = {
-		"walk",
-		"run",
-		"climb",
-		"jump"
-	};
-	static size_t frame_index = 1;
-
-
-
-	const sprite_state_t* state = sprite_state( sprite, state_names[state_index] );
-	if( frame_index >= sprite_state_frame_count(state) )
-	{
-		state_index++;
-
-
-		if( state_index >= 4 )
-			state_index = 0;
-
-
-		frame_index = 0;
-
-		SDL_Delay( 500 );
-
-		state = sprite_state( sprite, state_names[state_index] );
-	}
-	const sprite_frame_t* frame = sprite_state_frame( state, frame_index );
-
-
-	glUniform2f( uniform_sprite_frame_position, frame->x, frame->y );
-	glUniform2f( uniform_sprite_frame_frame_dimensions, frame->width, frame->height );
-	glUniform2f( uniform_sprite_frame_texture_dimensions, sprite_width(sprite), sprite_height(sprite) );
-
-	glBindTexture( GL_TEXTURE_2D, texture );
-	glBindVertexArray( vao );
-	glDrawArrays( GL_TRIANGLES, 0, sizeof(sprite_mesh) / sizeof(sprite_mesh[0]) );
-
-	glDisableVertexAttribArray( attribute_vertex );
-	glDisableVertexAttribArray( attribute_tex_coord );
-
-	SDL_Delay( frame->time );
-	frame_index++;
-	#endif
 
 	SDL_GL_SwapWindow( window );
 
@@ -399,11 +350,10 @@ void dump_sdl_error( void )
 
 void sprite_render( const sprite_frame_t* frame )
 {
-
 	int width; int height;
 	SDL_GetWindowSize( window, &width, &height );
 	GLfloat aspect = ((GLfloat)width) / height;
-	vec3_t translation = VEC3_VECTOR( 0.0, 0.0, -10 );
+	//vec3_t translation = VEC3_VECTOR( 0.0, 0.0, -10 );
 	mat4_t projection = orthographic( -3.0*aspect, 3.0*aspect, -3.0, 3.0, -10.0, 10.0 );
 
 	mat4_t transform = MAT4_IDENTITY;// ;translate( &translation );
