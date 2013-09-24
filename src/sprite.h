@@ -30,6 +30,7 @@ extern "C" {
 
 	
 #define SPRITE_MAX_STATE_NAME_LENGTH    15
+#define SPRITE_ANIMATION_STACK_DEPTH    8
 
 struct sprite;
 typedef struct sprite sprite_t;
@@ -90,20 +91,12 @@ typedef void (*sprite_render_fxn) ( const sprite_frame_t* frame );
  *
  *  Play sprite animations
  */
-typedef struct sprite_player {
-	const sprite_t* sprite;
-	const sprite_state_t* initial_state;
-	const sprite_state_t* state;
-	uint16_t frame_index;
-	uint16_t loop_count;
-	uint32_t last_frame_time;
-	sprite_render_fxn render;
-	bool is_playing;
-	void* user_data;
-} sprite_player_t;
+struct sprite_player;
+typedef struct sprite_player sprite_player_t;
 
-void sprite_player_initialize    ( sprite_player_t* sp, const sprite_t* sprite, const char* initial_state, sprite_render_fxn render );
-void sprite_player_set_user_data ( sprite_player_t* sp, const void* data );
+sprite_player_t* sprite_player_create        ( const sprite_t* sprite, const char* initial_state, sprite_render_fxn render );
+void             sprite_player_destroy       ( sprite_player_t** sp );
+void             sprite_player_set_user_data ( sprite_player_t* sp, const void* data );
 void sprite_player_play          ( sprite_player_t* sp, const char* name );
 void sprite_player_play_state    ( sprite_player_t* sp, const sprite_state_t* state );
 bool sprite_player_is_playing    ( sprite_player_t* sp, const char* name );

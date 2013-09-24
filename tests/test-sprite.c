@@ -34,11 +34,12 @@ static void handle_event   ( const SDL_Event* e );
 
 typedef struct entity {
 	sprite_t* sprite;
-	sprite_player_t sp;
+	sprite_player_t* sp;
 
 	int orientation;
 	vec3_t position;
 	vec2_t speed;
+	vec2_t target_speed;
 } entity_t;
 
 static void entity_initialize ( entity_t* e, const char* filename );
@@ -64,6 +65,7 @@ GLint uniform_sprite_frame_frame_dimensions   = -1;
 GLint uniform_sprite_frame_texture_dimensions = -1;
 GLint uniform_orientation                     = -1;
 GLuint texture                                =  0;
+static uint8_t keys[ SDL_NUM_SCANCODES ];
 
 static entity_t robot;
 static bool exiting         = false;
@@ -90,9 +92,6 @@ static GLfloat sprite_uvs[] = {
 
 
 
-
-
-
 int main( int argc, char* argv[] )
 {
 	if( SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO) < 0 )
@@ -109,7 +108,7 @@ int main( int argc, char* argv[] )
 
 	int flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
 	//flags |= SDL_WINDOW_FULLSCREEN;
-	window = SDL_CreateWindow( "Test Shaders", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, flags );
+	window = SDL_CreateWindow( "Test Robot Sprite", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, flags );
 
 	renderer = SDLCALL SDL_CreateRenderer( window, -1, SDL_RENDERER_ACCELERATED );
 
@@ -154,54 +153,71 @@ void handle_event( const SDL_Event* e )
 	{
 		case SDL_KEYDOWN:
 		{
-			uint16_t key = e->key.keysym.sym;
+			uint8_t scancode = e->key.keysym.scancode;
+			keys[ scancode ] = 1;
+			switch( scancode )
+			{
+    			case SDL_SCANCODE_ESCAPE:
+					exiting = true;
+					break;
+				default:
+					break;
+			}
+#if 0
 			switch( key )
 			{
     			case SDLK_ESCAPE:
 					exiting = true;
 					break;
     			case SDLK_w:
-					sprite_player_play( &robot.sp, "climb" );
+					sprite_player_play( robot.sp, "climb" );
 					break;
     			case SDLK_s:
 					break;
     			case SDLK_a:
-					robot.orientation = -1;
-
 					if( e->key.keysym.mod & KMOD_LSHIFT )
 					{
-						robot.speed.x = 0.006f;
-						sprite_player_play( &robot.sp, "run" );
+						robot.target_speed.x = 0.06f;
+						sprite_player_play( robot.sp, "run" );
 					}
 					else
 					{
-						robot.speed.x = 0.003f;
-						sprite_player_play( &robot.sp, "walk" );
+						robot.target_speed.x = 0.003f;
+						sprite_player_play( robot.sp, "walk" );
 					}
+					robot.orientation = -1;
 					break;
     			case SDLK_d:
-					robot.orientation = 1;
 
 					if( e->key.keysym.mod & KMOD_LSHIFT )
 					{
-						robot.speed.x = 0.006f;
-						sprite_player_play( &robot.sp, "run" );
+						robot.target_speed.x = 0.006f;
+						sprite_player_play( robot.sp, "run" );
 					}
 					else
 					{
-						robot.speed.x = 0.003f;
-						sprite_player_play( &robot.sp, "walk" );
+						robot.target_speed.x = 0.003f;
+						sprite_player_play( robot.sp, "walk" );
 					}
+					robot.orientation = 1;
 					break;
 				case SDLK_SPACE:
-					robot.speed.y = 0.01f;
-					sprite_player_play( &robot.sp, "jump" );
+					robot.speed.y = lerp( 0.8f, robot.speed.y, robot.target_speed.y );
+					sprite_player_play( robot.sp, "jump" );
 					break;
 				default:
 					break;
 			}
+#endif
 			break;
 		}
+		case SDL_KEYUP:
+		{
+			uint16_t scancode = e->key.keysym.scancode;
+			keys[ scancode ] = 0;
+			break;
+		}
+
 		case SDL_QUIT:
 			break;
 		default:
@@ -357,34 +373,91 @@ void dump_sdl_error( void )
 void entity_initialize( entity_t* e, const char* sprite_file )
 {
 	e->sprite      = sprite_from_file( sprite_file );
+	e->sp          = sprite_player_create( e->sprite, "idle", sprite_render );
 	e->orientation = 1;
 	e->position.x  = 0.0f;
 	e->position.y  = 0.0f;
 	e->position.z  = 0.0f;
 	e->speed.x     = 0.0f;
 	e->speed.y     = 0.0f;
-	sprite_player_initialize( &e->sp, e->sprite, "idle", sprite_render );
+	e->target_speed.x = 0.0f;
+	e->target_speed.y = 0.0f;
 }
 
 void entity_update( entity_t* e, const uint32_t delta )
 {
-	if( sprite_player_is_playing( &e->sp, "idle" ) )
+	if( sprite_player_is_playing( e->sp, "idle" ) )
 	{
 		//e->speed.x = 0.0f;
 	}
 
 
-	if( !sprite_player_is_playing( &e->sp, "jump" ) )
+	if( !sprite_player_is_playing( e->sp, "jump" ) )
 	{
 		e->speed.y = 0.0f;
 
 		if( e->position.y > 0.0 )
 		{
 			e->position.y -= 0.01f * delta;
-
 		}
 	}
 
+
+	if( keys[ SDL_SCANCODE_W ] )
+	{
+		sprite_player_play( robot.sp, "climb" );
+	}
+
+
+	if( keys[ SDL_SCANCODE_A ] )
+	{
+		robot.orientation = -1;
+
+		if( keys[ SDL_SCANCODE_LSHIFT ] )
+		{
+			robot.target_speed.x = 0.006f;
+			sprite_player_play( robot.sp, "run" );
+		}
+		else
+		{
+			robot.target_speed.x = 0.003f;
+			sprite_player_play( robot.sp, "walk" );
+		}
+	}
+	else if( keys[ SDL_SCANCODE_D ] )
+	{
+		robot.orientation = 1;
+
+		if( keys[ SDL_SCANCODE_LSHIFT ] )
+		{
+			robot.target_speed.x = 0.006f;
+			sprite_player_play( robot.sp, "run" );
+		}
+		else
+		{
+			robot.target_speed.x = 0.003f;
+			sprite_player_play( robot.sp, "walk" );
+		}
+	}
+	else
+	{
+		sprite_player_play( robot.sp, "idle" );
+		robot.target_speed.x = 0.0f;
+	}
+
+	if( keys[ SDL_SCANCODE_SPACE ] && !sprite_player_is_playing( robot.sp, "jump") )
+	{
+		sprite_player_play( robot.sp, "jump" );
+		robot.target_speed.y = 0.02f;
+	}
+	else
+	{
+		robot.target_speed.y = 0.0f;
+	}
+
+
+	robot.speed.x = lerp( 0.6f, robot.speed.x, robot.target_speed.x );
+	robot.speed.y = lerp( 0.2f, robot.speed.y, robot.target_speed.y );
 
 	e->position.x += e->orientation * e->speed.x * delta;
 	e->position.y += e->speed.y * delta;
@@ -394,16 +467,17 @@ void entity_update( entity_t* e, const uint32_t delta )
 void entity_render( entity_t* e )
 {
 	/* render the sprite */
-	sprite_player_render( &e->sp );
+	sprite_player_render( e->sp );
 }
 
 void sprite_render( const sprite_frame_t* frame )
 {
+	assert( frame );
 	int width; int height;
 	SDL_GetWindowSize( window, &width, &height );
 	GLfloat aspect = ((GLfloat)width) / height;
 	//vec3_t translation = VEC3_VECTOR( 0.0, 0.0, -10 );
-	mat4_t projection = orthographic( -7.0*aspect, 7.0*aspect, -2.0, 12.0, -10.0, 10.0 );
+	mat4_t projection = orthographic( -5.0*aspect, 5.0*aspect, -2.0, 9.0, -10.0, 10.0 );
 
 	mat4_t transform = MAT4_IDENTITY;// ;translate( &translation );
 	mat4_t position = translate( &robot.position );
