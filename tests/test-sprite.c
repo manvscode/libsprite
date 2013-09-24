@@ -24,14 +24,27 @@
 #include <SDL2/SDL.h>
 #include <libsimplegl/simplegl.h>
 #include "../src/sprite.h"
-#include "../src/sprite-state-machine.h"
 
 static void initialize     ( void );
 static void deinitialize   ( void );
 static void render         ( void );
 static void dump_sdl_error ( void );
 static void handle_event   ( const SDL_Event* e );
-static void sprite_render  ( const sprite_frame_t* frame );
+
+
+typedef struct entity {
+	sprite_t* sprite;
+	sprite_player_t sp;
+
+	int orientation;
+	vec3_t position;
+	vec2_t speed;
+} entity_t;
+
+static void entity_initialize ( entity_t* e, const char* filename );
+static void entity_update     ( entity_t* e, const uint32_t delta );
+static void entity_render     ( entity_t* e );
+static void sprite_render     ( const sprite_frame_t* frame );
 
 SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
@@ -41,18 +54,21 @@ GLuint vao = 0;
 GLuint vbo_vertices = 0;
 GLuint vbo_tex_coords = 0;
 
-GLuint program             =  0;
-GLint attribute_vertex     = -1;
-GLint attribute_tex_coord  = -1;
-GLint uniform_model_view   = -1;
-GLint uniform_texture      = -1;
-GLint uniform_sprite_frame_position = -1;
-GLint uniform_sprite_frame_frame_dimensions = -1;
+GLuint program                                =  0;
+GLint attribute_vertex                        = -1;
+GLint attribute_tex_coord                     = -1;
+GLint uniform_model_view                      = -1;
+GLint uniform_texture                         = -1;
+GLint uniform_sprite_frame_position           = -1;
+GLint uniform_sprite_frame_frame_dimensions   = -1;
 GLint uniform_sprite_frame_texture_dimensions = -1;
-GLint uniform_orientation  = 1;
-GLuint texture             =  0;
-uint32_t delta = 0;
+GLint uniform_orientation                     = -1;
+GLuint texture                                =  0;
 
+static entity_t robot;
+static bool exiting         = false;
+static uint32_t delta       = 0;
+static uint32_t frame_count = 0;
 
 static GLfloat sprite_mesh[] = {
 	-0.5f, -0.5f,
@@ -72,21 +88,10 @@ static GLfloat sprite_uvs[] = {
 	1.0f, 1.0f,
 };
 
-static bool exiting = false;
-
-
-typedef struct entity {
-	sprite_t* sprite;
-	sprite_state_machine_t ssm;
-
-	int orientation;
-	vec3_t position;
-	vec2_t speed;
-} entity_t;
 
 
 
-entity_t robot;
+
 
 int main( int argc, char* argv[] )
 {
@@ -103,8 +108,8 @@ int main( int argc, char* argv[] )
 	SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 24 );
 
 	int flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
-	flags |= SDL_WINDOW_FULLSCREEN;
-	window = SDL_CreateWindow( "Test Shaders", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 480, flags );
+	//flags |= SDL_WINDOW_FULLSCREEN;
+	window = SDL_CreateWindow( "Test Shaders", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, flags );
 
 	renderer = SDLCALL SDL_CreateRenderer( window, -1, SDL_RENDERER_ACCELERATED );
 
@@ -156,7 +161,7 @@ void handle_event( const SDL_Event* e )
 					exiting = true;
 					break;
     			case SDLK_w:
-					sprite_state_machine_transition( &robot.ssm, "climb" );
+					sprite_player_play( &robot.sp, "climb" );
 					break;
     			case SDLK_s:
 					break;
@@ -165,33 +170,32 @@ void handle_event( const SDL_Event* e )
 
 					if( e->key.keysym.mod & KMOD_LSHIFT )
 					{
-						robot.speed.x = 0.01f;
-						sprite_state_machine_transition( &robot.ssm, "run" );
+						robot.speed.x = 0.006f;
+						sprite_player_play( &robot.sp, "run" );
 					}
 					else
 					{
-						robot.speed.x = 0.006f;
-						sprite_state_machine_transition( &robot.ssm, "walk" );
+						robot.speed.x = 0.003f;
+						sprite_player_play( &robot.sp, "walk" );
 					}
-					robot.position.x -= robot.speed.x * delta;
 					break;
     			case SDLK_d:
 					robot.orientation = 1;
 
 					if( e->key.keysym.mod & KMOD_LSHIFT )
 					{
-						robot.speed.x = 0.01f;
-						sprite_state_machine_transition( &robot.ssm, "run" );
+						robot.speed.x = 0.006f;
+						sprite_player_play( &robot.sp, "run" );
 					}
 					else
 					{
-						robot.speed.x = 0.006f;
-						sprite_state_machine_transition( &robot.ssm, "walk" );
+						robot.speed.x = 0.003f;
+						sprite_player_play( &robot.sp, "walk" );
 					}
-					robot.position.x += robot.speed.x * delta;
 					break;
 				case SDLK_SPACE:
-					sprite_state_machine_transition( &robot.ssm, "jump" );
+					robot.speed.y = 0.01f;
+					sprite_player_play( &robot.sp, "jump" );
 					break;
 				default:
 					break;
@@ -207,14 +211,7 @@ void handle_event( const SDL_Event* e )
 
 void initialize( void )
 {
-	robot.sprite = sprite_from_file( "./tests/robot.spr" );
-	robot.orientation = 1;
-	robot.position.x = 0;
-	robot.position.y = 0;
-	robot.position.z = 0;
-	robot.speed.x = 0.0065f;
-	robot.speed.y = 0.0065f;
-	sprite_state_machine_initialize( &robot.ssm, robot.sprite, "idle", sprite_render );
+	entity_initialize( &robot, "./tests/robot.spr" );
 	dump_gl_info( );
 	glClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
 
@@ -313,6 +310,7 @@ void initialize( void )
 	GL_ASSERT_NO_ERROR( );
 }
 
+
 void deinitialize( void )
 {
 	tex2d_destroy( texture );
@@ -323,19 +321,27 @@ void deinitialize( void )
 	sprite_destroy( &robot.sprite );
 }
 
+static inline float framerate( uint32_t frame_count, uint32_t time_in_ms )
+{
+	return (frame_count * 1000.0f) / time_in_ms;
+}
+
 void render( )
 {
-	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT );
 	uint32_t now = SDL_GetTicks( );
 	static uint32_t last_render = 0;
+	delta = now - last_render;
+	last_render = now;
+	frame_count++;
 
-	/* render the sprite */
-	sprite_state_machine_render( &robot.ssm );
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT );
+
+	entity_render( &robot );
+	entity_update( &robot, delta );
 
 	SDL_GL_SwapWindow( window );
 
-	delta = now - last_render;
-	last_render = now;
+	printf( "fps %.2f\n", framerate(frame_count, delta) );
 }
 
 void dump_sdl_error( void )
@@ -348,13 +354,56 @@ void dump_sdl_error( void )
 	}
 }
 
+void entity_initialize( entity_t* e, const char* sprite_file )
+{
+	e->sprite      = sprite_from_file( sprite_file );
+	e->orientation = 1;
+	e->position.x  = 0.0f;
+	e->position.y  = 0.0f;
+	e->position.z  = 0.0f;
+	e->speed.x     = 0.0f;
+	e->speed.y     = 0.0f;
+	sprite_player_initialize( &e->sp, e->sprite, "idle", sprite_render );
+}
+
+void entity_update( entity_t* e, const uint32_t delta )
+{
+	if( sprite_player_is_playing( &e->sp, "idle" ) )
+	{
+		//e->speed.x = 0.0f;
+	}
+
+
+	if( !sprite_player_is_playing( &e->sp, "jump" ) )
+	{
+		e->speed.y = 0.0f;
+
+		if( e->position.y > 0.0 )
+		{
+			e->position.y -= 0.01f * delta;
+
+		}
+	}
+
+
+	e->position.x += e->orientation * e->speed.x * delta;
+	e->position.y += e->speed.y * delta;
+
+}
+
+void entity_render( entity_t* e )
+{
+	/* render the sprite */
+	sprite_player_render( &e->sp );
+}
+
 void sprite_render( const sprite_frame_t* frame )
 {
 	int width; int height;
 	SDL_GetWindowSize( window, &width, &height );
 	GLfloat aspect = ((GLfloat)width) / height;
 	//vec3_t translation = VEC3_VECTOR( 0.0, 0.0, -10 );
-	mat4_t projection = orthographic( -3.0*aspect, 3.0*aspect, -3.0, 3.0, -10.0, 10.0 );
+	mat4_t projection = orthographic( -7.0*aspect, 7.0*aspect, -2.0, 12.0, -10.0, 10.0 );
 
 	mat4_t transform = MAT4_IDENTITY;// ;translate( &translation );
 	mat4_t position = translate( &robot.position );

@@ -33,7 +33,7 @@ struct sprite_state {
 	char     name[ SPRITE_MAX_STATE_NAME_LENGTH + 1 ];
 	uint16_t const_time; /* optional. 0 means to ignore and use frame's time */
 	uint16_t loop_count; /* optional, 0 if loops forever */
-	array_t  frames;
+	lc_array_t  frames;
 };
 
 struct sprite {
@@ -45,8 +45,8 @@ struct sprite {
 	uint8_t  bytes_per_pixel;
 	void*    pixels;
 
-	tree_map_t states;  /* name -> state */
-	tree_map_iterator_t state_itr;
+	lc_tree_map_t states;  /* name -> state */
+	lc_tree_map_iterator_t state_itr;
 };
 
 static void   _sprite_create            ( sprite_t* p_sprite, const char* name, bool use_transparency );
@@ -459,7 +459,7 @@ uint16_t sprite_state_frame_count( const sprite_state_t* p_state )
 const sprite_frame_t* sprite_state_frame( const sprite_state_t* p_state, uint16_t index )
 {
 	assert( p_state );
-	return array_elem( (array_t*) &p_state->frames, index, sprite_frame_t );
+	return array_elem( (lc_array_t*) &p_state->frames, index, sprite_frame_t );
 }
 
 #define SPRITE_USE_LITTLE_ENDIAN
@@ -619,7 +619,7 @@ bool sprite_save( sprite_t* p_sprite, const char* filename )
 	uint16_t state_count = tree_map_size( &p_sprite->states );
 	sprite_write( &state_count, sizeof(state_count), file, is_big_endian );
 
-	tree_map_iterator_t itr;
+	lc_tree_map_iterator_t itr;
 	for( itr = tree_map_begin(&p_sprite->states);
 	     itr != tree_map_end( );
 	     itr = tree_map_next(itr) )

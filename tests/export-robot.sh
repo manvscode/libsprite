@@ -3,7 +3,7 @@
 
 
 ./bin/sprc -c "Robot" \
-	-t 70 \
+	-t 60 \
 	-l 0 \
     -a idle:./tests/robot/idle0.tga \
 	\

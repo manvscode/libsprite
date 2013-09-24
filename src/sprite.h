@@ -81,6 +81,37 @@ const sprite_frame_t* sprite_state_frame          ( const sprite_state_t* p_stat
 sprite_t*             sprite_from_file          ( const char* filename );
 bool                  sprite_save               ( sprite_t* p_sprite, const char* filename );
 
+
+
+typedef void (*sprite_render_fxn) ( const sprite_frame_t* frame );
+
+/*
+ *  Sprite Player
+ *
+ *  Play sprite animations
+ */
+typedef struct sprite_player {
+	const sprite_t* sprite;
+	const sprite_state_t* initial_state;
+	const sprite_state_t* state;
+	uint16_t frame_index;
+	uint16_t loop_count;
+	uint32_t last_frame_time;
+	sprite_render_fxn render;
+	bool is_playing;
+	void* user_data;
+} sprite_player_t;
+
+void sprite_player_initialize    ( sprite_player_t* sp, const sprite_t* sprite, const char* initial_state, sprite_render_fxn render );
+void sprite_player_set_user_data ( sprite_player_t* sp, const void* data );
+void sprite_player_play          ( sprite_player_t* sp, const char* name );
+void sprite_player_play_state    ( sprite_player_t* sp, const sprite_state_t* state );
+bool sprite_player_is_playing    ( sprite_player_t* sp, const char* name );
+void sprite_player_stop          ( sprite_player_t* sp );
+void sprite_player_pause         ( sprite_player_t* sp );
+void sprite_player_unpause       ( sprite_player_t* sp );
+void sprite_player_render        ( sprite_player_t* sp );
+
 #ifdef __cplusplus
 }
 #endif 

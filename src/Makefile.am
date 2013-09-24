@@ -1,9 +1,9 @@
 
 # Add new files in alphabetical order. Thanks.
-libsprite_src = texture-packer.c sprite.c sprite-state-machine.c
+libsprite_src = texture-packer.c sprite.c sprite-player.c
 
 # Add new files in alphabetical order. Thanks.
-libsprite_headers = texture-packer.h sprite.h sprite-state-machine.h
+libsprite_headers = texture-packer.h sprite.h
 
 library_includedir      = $(includedir)/libsprite/
 library_include_HEADERS = $(libsprite_headers)
