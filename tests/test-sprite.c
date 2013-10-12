@@ -155,6 +155,7 @@ void handle_event( const SDL_Event* e )
 		{
 			uint8_t scancode = e->key.keysym.scancode;
 			keys[ scancode ] = 1;
+
 			switch( scancode )
 			{
     			case SDL_SCANCODE_ESCAPE:
@@ -163,52 +164,6 @@ void handle_event( const SDL_Event* e )
 				default:
 					break;
 			}
-#if 0
-			switch( key )
-			{
-    			case SDLK_ESCAPE:
-					exiting = true;
-					break;
-    			case SDLK_w:
-					sprite_player_play( robot.sp, "climb" );
-					break;
-    			case SDLK_s:
-					break;
-    			case SDLK_a:
-					if( e->key.keysym.mod & KMOD_LSHIFT )
-					{
-						robot.target_speed.x = 0.06f;
-						sprite_player_play( robot.sp, "run" );
-					}
-					else
-					{
-						robot.target_speed.x = 0.003f;
-						sprite_player_play( robot.sp, "walk" );
-					}
-					robot.orientation = -1;
-					break;
-    			case SDLK_d:
-
-					if( e->key.keysym.mod & KMOD_LSHIFT )
-					{
-						robot.target_speed.x = 0.006f;
-						sprite_player_play( robot.sp, "run" );
-					}
-					else
-					{
-						robot.target_speed.x = 0.003f;
-						sprite_player_play( robot.sp, "walk" );
-					}
-					robot.orientation = 1;
-					break;
-				case SDLK_SPACE:
-					robot.speed.y = lerp( 0.8f, robot.speed.y, robot.target_speed.y );
-					sprite_player_play( robot.sp, "jump" );
-					break;
-				default:
-					break;
-			}
-#endif
 			break;
 		}
 		case SDL_KEYUP:
@@ -237,12 +192,12 @@ void initialize( void )
 	GL_ASSERT_NO_ERROR( );
 	glPointSize( 4.0 );
 
-	//glEnable( GL_LINE_SMOOTH );
-	//glEnable( GL_POLYGON_SMOOTH );
+	glEnable( GL_LINE_SMOOTH );
+	glEnable( GL_POLYGON_SMOOTH );
 
 
-	//glEnable( GL_BLEND );
-	//glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+	glEnable( GL_BLEND );
+	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 
 	texture = tex2d_create( );
 
@@ -386,12 +341,6 @@ void entity_initialize( entity_t* e, const char* sprite_file )
 
 void entity_update( entity_t* e, const uint32_t delta )
 {
-	if( sprite_player_is_playing( e->sp, "idle" ) )
-	{
-		//e->speed.x = 0.0f;
-	}
-
-
 	if( !sprite_player_is_playing( e->sp, "jump" ) )
 	{
 		e->speed.y = 0.0f;
@@ -400,12 +349,6 @@ void entity_update( entity_t* e, const uint32_t delta )
 		{
 			e->position.y -= 0.01f * delta;
 		}
-	}
-
-
-	if( keys[ SDL_SCANCODE_W ] )
-	{
-		sprite_player_play( robot.sp, "climb" );
 	}
 
 
@@ -439,22 +382,24 @@ void entity_update( entity_t* e, const uint32_t delta )
 			sprite_player_play( robot.sp, "walk" );
 		}
 	}
+	else if( keys[ SDL_SCANCODE_W ] )
+	{
+		sprite_player_play( robot.sp, "climb" );
+	}
 	else
 	{
-		sprite_player_play( robot.sp, "idle" );
 		robot.target_speed.x = 0.0f;
 	}
 
 	if( keys[ SDL_SCANCODE_SPACE ] && !sprite_player_is_playing( robot.sp, "jump") )
 	{
 		sprite_player_play( robot.sp, "jump" );
-		robot.target_speed.y = 0.02f;
+		robot.target_speed.y = 0.05f;
 	}
 	else
 	{
 		robot.target_speed.y = 0.0f;
 	}
-
 
 	robot.speed.x = lerp( 0.6f, robot.speed.x, robot.target_speed.x );
 	robot.speed.y = lerp( 0.2f, robot.speed.y, robot.target_speed.y );
