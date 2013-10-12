@@ -70,7 +70,6 @@ static uint8_t keys[ SDL_NUM_SCANCODES ];
 static entity_t robot;
 static bool exiting         = false;
 static uint32_t delta       = 0;
-static uint32_t frame_count = 0;
 
 static GLfloat sprite_mesh[] = {
 	-0.5f, -0.5f,
@@ -292,9 +291,9 @@ void deinitialize( void )
 	sprite_destroy( &robot.sprite );
 }
 
-static inline float framerate( uint32_t frame_count, uint32_t time_in_ms )
+static inline float framerate( uint32_t time_in_ms )
 {
-	return (frame_count * 1000.0f) / time_in_ms;
+	return (1000.0f) / time_in_ms;
 }
 
 void render( )
@@ -303,7 +302,6 @@ void render( )
 	static uint32_t last_render = 0;
 	delta = now - last_render;
 	last_render = now;
-	frame_count++;
 
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT );
 
@@ -312,7 +310,7 @@ void render( )
 
 	SDL_GL_SwapWindow( window );
 
-	printf( "fps %.2f\n", framerate(frame_count, delta) );
+	printf( "fps %.2f\n", framerate(delta) );
 }
 
 void dump_sdl_error( void )
@@ -328,7 +326,7 @@ void dump_sdl_error( void )
 void entity_initialize( entity_t* e, const char* sprite_file )
 {
 	e->sprite      = sprite_from_file( sprite_file );
-	e->sp          = sprite_player_create( e->sprite, "idle", sprite_render );
+	e->sp          = sprite_player_create( e->sprite );
 	e->orientation = 1;
 	e->position.x  = 0.0f;
 	e->position.y  = 0.0f;
@@ -337,6 +335,8 @@ void entity_initialize( entity_t* e, const char* sprite_file )
 	e->speed.y     = 0.0f;
 	e->target_speed.x = 0.0f;
 	e->target_speed.y = 0.0f;
+
+	//sprite_player_play( e->sp, "idle" );
 }
 
 void entity_update( entity_t* e, const uint32_t delta )
@@ -389,9 +389,10 @@ void entity_update( entity_t* e, const uint32_t delta )
 	else
 	{
 		robot.target_speed.x = 0.0f;
+		sprite_player_play( robot.sp, "idle" );
 	}
 
-	if( keys[ SDL_SCANCODE_SPACE ] && !sprite_player_is_playing( robot.sp, "jump") )
+	if( keys[ SDL_SCANCODE_SPACE ] )//&& !sprite_player_is_playing( robot.sp, "jump") )
 	{
 		sprite_player_play( robot.sp, "jump" );
 		robot.target_speed.y = 0.05f;
@@ -412,7 +413,15 @@ void entity_update( entity_t* e, const uint32_t delta )
 void entity_render( entity_t* e )
 {
 	/* render the sprite */
-	sprite_player_render( e->sp );
+	#if 1
+	const sprite_frame_t* frame = sprite_player_frame( e->sp );
+	if( frame )
+	{
+		sprite_render( frame );
+	}
+	#else
+	sprite_player_render( e->sp, sprite_render );
+	#endif
 }
 
 void sprite_render( const sprite_frame_t* frame )
