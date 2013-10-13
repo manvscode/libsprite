@@ -297,7 +297,7 @@ void add( sprite_t* sprite, const char* state, const char* filename )
 	printf( "Added %s to state '%s'\n", filename, state );
 
 	const char* extension = strrchr( filename, '.' );
-	image_file_format_t format = PNG;
+	image_file_format_t format = IMAGEIO_PNG;
 	image_t image;
 
 	if( extension )
@@ -320,6 +320,13 @@ void add( sprite_t* sprite, const char* state, const char* filename )
 
 	imageio_image_load( &image, filename, format );
 
+	if( format == IMAGEIO_PNG )
+	{
+		/* These pesky PNG files need to be flipped vertically to be
+		 * correctly oriented for OpenGL.
+		 */
+		imageio_flip_vertically( image.width, image.height, image.bits_per_pixel >> 3, image.pixels );
+	}
 
 	sprite_info_t* info = sprite_info_create( sprite, state, sprite_compiler.frame_count_for_state );
 	info->state_loop_count = sprite_compiler.state_loop_count;
