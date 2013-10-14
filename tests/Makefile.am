@@ -1,4 +1,6 @@
-#AM_CFLAGS = -std=c99 -Wall -pedantic -O3 -I$(top_builddir)/src/ -I/usr/local/include/ -L$(top_builddir)/lib/  -L/usr/local/lib
+
+if ENABLE_PROGRAMS
+
 AM_CFLAGS = -std=c99 -pg -g -ggdb -O0 -I$(top_builddir)/src/ -I/usr/local/include/ -L$(top_builddir)/lib/  -L/usr/local/lib
 LDADD     = -lcollections -limageio
 
@@ -18,3 +20,5 @@ __top_builddir__bin_test_sprite_LDFLAGS = -lcollections -limageio -lsimplegl -lG
 __top_builddir__bin_sprc_SOURCES = sprc.c
 __top_builddir__bin_sprc_CFLAGS  = 
 __top_builddir__bin_sprc_LDFLAGS = -lutility -lcollections -limageio $(top_builddir)/lib/.libs/libsprite.a
+
+endif

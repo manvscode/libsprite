@@ -3,7 +3,6 @@
 #include <assert.h>
 #include <SDL2/SDL.h>
 #include <libcollections/array.h>
-#include <libcollections/vector.h>
 #include "sprite.h"
 
 struct sprite_player {

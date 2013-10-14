@@ -1,3 +1,4 @@
+AC_PREREQ(2.67)
 AC_INIT([libsprite], [0.1], [manvscode@gmail.com], [libsprite], [http://www.manvscode.com/])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
@@ -19,11 +20,12 @@ AH_BOTTOM([
 ])
 
 
-DFLAGS="-D DEBUG_SPRITE -D DEBUG_TEXTURE_PACKER"
+#DFLAGS="-D DEBUG_SPRITE -D DEBUG_TEXTURE_PACKER"
+DFLAGS="$DFLAGS"
 
-CFLAGS="-std=gnu99 -Wall -pedantic -g -ggdb -O0 $DFLAGS -I/usr/local/include"
-#CFLAGS="-std=gnu99 -Wall -pedantic -O3 -I/usr/local/include"
-LDFLAGS="-lutility -limageio -lcollections -lsimplegl -lSDL2"
+#CFLAGS="-std=gnu99 -Wall -pedantic -g -ggdb -O0 $DFLAGS -I/usr/local/include"
+CFLAGS="$CFLAGS"
+LDFLAGS="$LDFLAGS-lutility -limageio -lcollections -lsimplegl -lSDL2"
 
 AM_PROG_AR
 
@@ -31,6 +33,13 @@ LT_INIT([shared static])
 AC_PROG_LIBTOOL
 AM_PROG_LIBTOOL
 
+
+AC_ARG_ENABLE([programs],
+	[AS_HELP_STRING([--disable-programs], [Enable command line tools.])],
+	[:],
+	[enable_programs=no])
+
+AM_CONDITIONAL([ENABLE_PROGRAMS], [test "$enable_programs" = "yes"])
 
 
 AC_PROG_INSTALL
