@@ -1,6 +1,4 @@
-
 if ENABLE_PROGRAMS
-
 AM_CFLAGS = -std=c99 -pg -g -ggdb -O0 -I$(top_builddir)/src/ -I/usr/local/include/ -L$(top_builddir)/lib/  -L/usr/local/lib
 LDADD     = -lcollections -limageio
 

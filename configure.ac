@@ -25,7 +25,7 @@ DFLAGS="$DFLAGS"
 
 #CFLAGS="-std=gnu99 -Wall -pedantic -g -ggdb -O0 $DFLAGS -I/usr/local/include"
 CFLAGS="$CFLAGS"
-LDFLAGS="$LDFLAGS-lutility -limageio -lcollections -lsimplegl -lSDL2"
+LDFLAGS="$LDFLAGS -lutility -limageio -lcollections -lsimplegl -lSDL2"
 
 AM_PROG_AR
 
