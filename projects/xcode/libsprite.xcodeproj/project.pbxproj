@@ -1,0 +1,403 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		08C284A8180DD4C000E96BF5 /* libsprite-config.h in Headers */ = {isa = PBXBuildFile; fileRef = 08C284A2180DD4C000E96BF5 /* libsprite-config.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		08C284A9180DD4C000E96BF5 /* sprite-player.c in Sources */ = {isa = PBXBuildFile; fileRef = 08C284A3180DD4C000E96BF5 /* sprite-player.c */; };
+		08C284AA180DD4C000E96BF5 /* sprite.c in Sources */ = {isa = PBXBuildFile; fileRef = 08C284A4180DD4C000E96BF5 /* sprite.c */; };
+		08C284AB180DD4C000E96BF5 /* sprite.h in Headers */ = {isa = PBXBuildFile; fileRef = 08C284A5180DD4C000E96BF5 /* sprite.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		08C284AC180DD4C000E96BF5 /* texture-packer.c in Sources */ = {isa = PBXBuildFile; fileRef = 08C284A6180DD4C000E96BF5 /* texture-packer.c */; };
+		08C284AD180DD4C000E96BF5 /* texture-packer.h in Headers */ = {isa = PBXBuildFile; fileRef = 08C284A7180DD4C000E96BF5 /* texture-packer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		08C28520180DD95D00E96BF5 /* libcollections.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 08C284B3180DD52000E96BF5 /* libcollections.a */; };
+		08C28521180DD95D00E96BF5 /* libimageio.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 08C284BC180DD5B800E96BF5 /* libimageio.a */; };
+		08C28522180DD95D00E96BF5 /* libutility.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 08C28506180DD72B00E96BF5 /* libutility.a */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		08C284B2180DD52000E96BF5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08C284AE180DD52000E96BF5 /* libcollections.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 08F9B722180DC9F300DC30C4;
+			remoteInfo = libcollections;
+		};
+		08C284B4180DD52A00E96BF5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08C284AE180DD52000E96BF5 /* libcollections.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 08F9B721180DC9F300DC30C4;
+			remoteInfo = libcollections;
+		};
+		08C284BB180DD5B800E96BF5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08C284B6180DD5B800E96BF5 /* libimageio.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 087C825D180D8072003D5A59;
+			remoteInfo = libimageio;
+		};
+		08C284BD180DD5BE00E96BF5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08C284B6180DD5B800E96BF5 /* libimageio.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 087C825C180D8072003D5A59;
+			remoteInfo = libimageio;
+		};
+		08C28505180DD72B00E96BF5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08C28500180DD72B00E96BF5 /* libutility.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 08C284C8180DD60300E96BF5;
+			remoteInfo = libutility;
+		};
+		08C28507180DD73500E96BF5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08C28500180DD72B00E96BF5 /* libutility.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 08C284C7180DD60300E96BF5;
+			remoteInfo = libutility;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		08C2849A180DD44D00E96BF5 /* libsprite.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libsprite.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		08C284A2180DD4C000E96BF5 /* libsprite-config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "libsprite-config.h"; path = "../../src/libsprite-config.h"; sourceTree = "<group>"; };
+		08C284A3180DD4C000E96BF5 /* sprite-player.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "sprite-player.c"; path = "../../src/sprite-player.c"; sourceTree = "<group>"; };
+		08C284A4180DD4C000E96BF5 /* sprite.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sprite.c; path = ../../src/sprite.c; sourceTree = "<group>"; };
+		08C284A5180DD4C000E96BF5 /* sprite.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sprite.h; path = ../../src/sprite.h; sourceTree = "<group>"; };
+		08C284A6180DD4C000E96BF5 /* texture-packer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "texture-packer.c"; path = "../../src/texture-packer.c"; sourceTree = "<group>"; };
+		08C284A7180DD4C000E96BF5 /* texture-packer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "texture-packer.h"; path = "../../src/texture-packer.h"; sourceTree = "<group>"; };
+		08C284AE180DD52000E96BF5 /* libcollections.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libcollections.xcodeproj; path = ../../../libcollections/projects/xcode/libcollections.xcodeproj; sourceTree = "<group>"; };
+		08C284B6180DD5B800E96BF5 /* libimageio.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libimageio.xcodeproj; path = ../../../libimageio/projects/xcode/libimageio.xcodeproj; sourceTree = "<group>"; };
+		08C28500180DD72B00E96BF5 /* libutility.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libutility.xcodeproj; path = ../../../libutility/projects/xcode/libutility.xcodeproj; sourceTree = "<group>"; };
+		08C28523180DD95D00E96BF5 /* libpng.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpng.a; path = "../../../../Library/Developer/Xcode/DerivedData/libsprite-flwoqhhqktloqxfznnxdebwnfksq/Build/Products/Debug-iphoneos/libpng.a"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		08C28497180DD44D00E96BF5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				08C28520180DD95D00E96BF5 /* libcollections.a in Frameworks */,
+				08C28521180DD95D00E96BF5 /* libimageio.a in Frameworks */,
+				08C28522180DD95D00E96BF5 /* libutility.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		08C28491180DD44D00E96BF5 = {
+			isa = PBXGroup;
+			children = (
+				08C28523180DD95D00E96BF5 /* libpng.a */,
+				08C28500180DD72B00E96BF5 /* libutility.xcodeproj */,
+				08C284B6180DD5B800E96BF5 /* libimageio.xcodeproj */,
+				08C284AE180DD52000E96BF5 /* libcollections.xcodeproj */,
+				08C284A1180DD4AA00E96BF5 /* src */,
+				08C2849B180DD44D00E96BF5 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		08C2849B180DD44D00E96BF5 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				08C2849A180DD44D00E96BF5 /* libsprite.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		08C284A1180DD4AA00E96BF5 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				08C284A2180DD4C000E96BF5 /* libsprite-config.h */,
+				08C284A3180DD4C000E96BF5 /* sprite-player.c */,
+				08C284A4180DD4C000E96BF5 /* sprite.c */,
+				08C284A5180DD4C000E96BF5 /* sprite.h */,
+				08C284A6180DD4C000E96BF5 /* texture-packer.c */,
+				08C284A7180DD4C000E96BF5 /* texture-packer.h */,
+			);
+			name = src;
+			sourceTree = "<group>";
+		};
+		08C284AF180DD52000E96BF5 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				08C284B3180DD52000E96BF5 /* libcollections.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		08C284B7180DD5B800E96BF5 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				08C284BC180DD5B800E96BF5 /* libimageio.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		08C28501180DD72B00E96BF5 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				08C28506180DD72B00E96BF5 /* libutility.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		08C28498180DD44D00E96BF5 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				08C284A8180DD4C000E96BF5 /* libsprite-config.h in Headers */,
+				08C284AD180DD4C000E96BF5 /* texture-packer.h in Headers */,
+				08C284AB180DD4C000E96BF5 /* sprite.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		08C28499180DD44D00E96BF5 /* libsprite */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 08C2849E180DD44D00E96BF5 /* Build configuration list for PBXNativeTarget "libsprite" */;
+			buildPhases = (
+				08C28496180DD44D00E96BF5 /* Sources */,
+				08C28497180DD44D00E96BF5 /* Frameworks */,
+				08C28498180DD44D00E96BF5 /* Headers */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				08C28508180DD73500E96BF5 /* PBXTargetDependency */,
+				08C284BE180DD5BE00E96BF5 /* PBXTargetDependency */,
+				08C284B5180DD52A00E96BF5 /* PBXTargetDependency */,
+			);
+			name = libsprite;
+			productName = libsprite;
+			productReference = 08C2849A180DD44D00E96BF5 /* libsprite.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		08C28492180DD44D00E96BF5 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0500;
+				ORGANIZATIONNAME = "Joe Marrero";
+			};
+			buildConfigurationList = 08C28495180DD44D00E96BF5 /* Build configuration list for PBXProject "libsprite" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 08C28491180DD44D00E96BF5;
+			productRefGroup = 08C2849B180DD44D00E96BF5 /* Products */;
+			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 08C284AF180DD52000E96BF5 /* Products */;
+					ProjectRef = 08C284AE180DD52000E96BF5 /* libcollections.xcodeproj */;
+				},
+				{
+					ProductGroup = 08C284B7180DD5B800E96BF5 /* Products */;
+					ProjectRef = 08C284B6180DD5B800E96BF5 /* libimageio.xcodeproj */;
+				},
+				{
+					ProductGroup = 08C28501180DD72B00E96BF5 /* Products */;
+					ProjectRef = 08C28500180DD72B00E96BF5 /* libutility.xcodeproj */;
+				},
+			);
+			projectRoot = "";
+			targets = (
+				08C28499180DD44D00E96BF5 /* libsprite */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		08C284B3180DD52000E96BF5 /* libcollections.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libcollections.a;
+			remoteRef = 08C284B2180DD52000E96BF5 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		08C284BC180DD5B800E96BF5 /* libimageio.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libimageio.a;
+			remoteRef = 08C284BB180DD5B800E96BF5 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		08C28506180DD72B00E96BF5 /* libutility.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libutility.a;
+			remoteRef = 08C28505180DD72B00E96BF5 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
+
+/* Begin PBXSourcesBuildPhase section */
+		08C28496180DD44D00E96BF5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				08C284AC180DD4C000E96BF5 /* texture-packer.c in Sources */,
+				08C284AA180DD4C000E96BF5 /* sprite.c in Sources */,
+				08C284A9180DD4C000E96BF5 /* sprite-player.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		08C284B5180DD52A00E96BF5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libcollections;
+			targetProxy = 08C284B4180DD52A00E96BF5 /* PBXContainerItemProxy */;
+		};
+		08C284BE180DD5BE00E96BF5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libimageio;
+			targetProxy = 08C284BD180DD5BE00E96BF5 /* PBXContainerItemProxy */;
+		};
+		08C28508180DD73500E96BF5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libutility;
+			targetProxy = 08C28507180DD73500E96BF5 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		08C2849C180DD44D00E96BF5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		08C2849D180DD44D00E96BF5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		08C2849F180DD44D00E96BF5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EXECUTABLE_PREFIX = "";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(USER_LIBRARY_DIR)/Developer/Xcode/DerivedData/libsprite-flwoqhhqktloqxfznnxdebwnfksq/Build/Products/Debug-iphoneos",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PUBLIC_HEADERS_FOLDER_PATH = "include/$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		08C284A0180DD44D00E96BF5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EXECUTABLE_PREFIX = "";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(USER_LIBRARY_DIR)/Developer/Xcode/DerivedData/libsprite-flwoqhhqktloqxfznnxdebwnfksq/Build/Products/Debug-iphoneos",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PUBLIC_HEADERS_FOLDER_PATH = "include/$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		08C28495180DD44D00E96BF5 /* Build configuration list for PBXProject "libsprite" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				08C2849C180DD44D00E96BF5 /* Debug */,
+				08C2849D180DD44D00E96BF5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		08C2849E180DD44D00E96BF5 /* Build configuration list for PBXNativeTarget "libsprite" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				08C2849F180DD44D00E96BF5 /* Debug */,
+				08C284A0180DD44D00E96BF5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 08C28492180DD44D00E96BF5 /* Project object */;
+}

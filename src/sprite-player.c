@@ -1,9 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
-#include <SDL2/SDL.h>
+#include <string.h>
 #include <libcollections/array.h>
 #include "sprite.h"
+
+static sprite_timer_fxn_t sprite_timer = NULL;
 
 struct sprite_player {
 	const sprite_t* sprite;
@@ -12,6 +14,7 @@ struct sprite_player {
 	uint16_t loop_count;
 	uint32_t last_frame_time;
 	bool is_playing;
+	sprite_timer_fxn_t timer;
 	void* user_data;
 
 };
@@ -40,15 +43,20 @@ void sprite_player_destroy( sprite_player_t** sp )
 	}
 }
 
-
 void sprite_player_initialize( sprite_player_t* sp, const sprite_t* sprite )
 {
 	assert( sp );
 	assert( sprite );
 
-	sp->sprite          = sprite;
-	sp->state           = NULL;
-	sp->user_data       = NULL;
+	sp->sprite     = sprite;
+	sp->state      = NULL;
+	sp->user_data  = NULL;
+}
+
+void sprite_player_set_timer( sprite_timer_fxn_t timer )
+{
+	assert( timer );
+	sprite_timer = timer;
 }
 
 void sprite_player_set_user_data( sprite_player_t* sp, const void* data )
@@ -70,7 +78,7 @@ void sprite_player_play_state( sprite_player_t* sp, const sprite_state_t* state 
 	{
 		sp->state           = state;
 		sp->frame_index     = 0;
-		sp->last_frame_time = SDL_GetTicks( );
+		sp->last_frame_time = sprite_timer( );
 		sp->loop_count      = sprite_state_loop_count( state ) - 1;
 		sp->is_playing      = true;
 		assert( sp->loop_count >= 0 );
@@ -102,7 +110,7 @@ void sprite_player_unpause( sprite_player_t* sp )
 }
 
 
-void sprite_player_render( sprite_player_t* sp, sprite_render_fxn render )
+void sprite_player_render( sprite_player_t* sp, sprite_render_fxn_t render )
 {
 	//assert( sp && sp->state );
 
@@ -126,7 +134,7 @@ void sprite_player_render( sprite_player_t* sp, sprite_render_fxn render )
 
 	const sprite_frame_t* frame = sprite_state_frame( sp->state, sp->frame_index );
 	assert( frame );
-	uint32_t now = SDL_GetTicks( );
+	uint32_t now = sprite_timer( );
 	int32_t diff = now - sp->last_frame_time;
 
 	render( frame );
@@ -163,7 +171,7 @@ const sprite_frame_t* sprite_player_frame( sprite_player_t* sp )
 
 	const sprite_frame_t* frame = sprite_state_frame( sp->state, sp->frame_index );
 	assert( frame );
-	uint32_t now = SDL_GetTicks( );
+	uint32_t now = sprite_timer( );
 	int32_t diff = now - sp->last_frame_time;
 
 	if( sp->is_playing && diff > frame->time )
