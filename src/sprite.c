@@ -506,8 +506,8 @@ static inline size_t sprite_readf( void* ptr, size_t size, FILE* file, bool is_b
 #define sprite_read(ptr, size, file, is_big_endian)   if( sprite_readf(ptr, size, file, is_big_endian) != 1 )  {assert( false && "read failed" ); goto failure; }
 #define sprite_write(ptr, size, file, is_big_endian)  if( sprite_writef(ptr, size, file, is_big_endian) != 1 ) {assert( false && "write failed" ); goto failure; }
 #else
-#define sprite_read(ptr, size, file, is_big_endian)   if( sprite_readf(ptr, size, file, is_big_endian) == 1 )  goto failure;
-#define sprite_write(ptr, size, file, is_big_endian)  if( sprite_writef(ptr, size, file, is_big_endian) == 1 ) goto failure;
+#define sprite_read(ptr, size, file, is_big_endian)   if( sprite_readf(ptr, size, file, is_big_endian) != 1 )  goto failure;
+#define sprite_write(ptr, size, file, is_big_endian)  if( sprite_writef(ptr, size, file, is_big_endian) != 1 ) goto failure;
 #endif
 
 
