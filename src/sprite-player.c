@@ -4,6 +4,7 @@
 #include <string.h>
 #include <libcollections/array.h>
 #include "sprite.h"
+#include "sprite-mem.h"
 
 static sprite_timer_fxn_t sprite_timer = NULL;
 
@@ -24,7 +25,7 @@ static void  sprite_player_initialize( sprite_player_t* sp, const sprite_t* spri
 
 sprite_player_t* sprite_player_create( const sprite_t* sprite )
 {
-	sprite_player_t* sp = (sprite_player_t*) malloc( sizeof(sprite_player_t) );
+	sprite_player_t* sp = (sprite_player_t*) sprite_alloc( sizeof(sprite_player_t) );
 
 	if( sp )
 	{
@@ -38,7 +39,7 @@ void sprite_player_destroy( sprite_player_t** sp )
 {
 	if( *sp )
 	{
-		free( *sp );
+		sprite_free( *sp );
 		*sp = NULL;
 	}
 }

@@ -26,8 +26,10 @@
 #include <libcollections/tree-map.h>
 #include <libutility/utility.h>
 #include "sprite.h"
+#include "sprite-mem.h"
 
 #define UNKNOWN_NAME       ("<unknown>")
+
 
 struct sprite_state {
 	char     name[ SPRITE_MAX_STATE_NAME_LENGTH + 1 ];
@@ -55,7 +57,7 @@ static void   _sprite_destroy           ( sprite_t* p_sprite );
 
 sprite_state_t* sprite_state_create( const char* name )
 {
-	sprite_state_t* p_state = malloc( sizeof(sprite_state_t) );
+	sprite_state_t* p_state = sprite_alloc( sizeof(sprite_state_t) );
 
 	if( p_state )
 	{
@@ -65,7 +67,7 @@ sprite_state_t* sprite_state_create( const char* name )
 		p_state->const_time  = 0;
 		p_state->loop_count  = 0;
 
-		array_create( &p_state->frames, sizeof(sprite_frame_t), 0, malloc, free );
+		array_create( &p_state->frames, sizeof(sprite_frame_t), 0, sprite_alloc, sprite_free );
 	}
 
 	return p_state;
@@ -75,7 +77,7 @@ void sprite_state_destroy( sprite_state_t* p_state )
 {
 	assert( p_state );
 	array_destroy( &p_state->frames );
-	free( p_state );
+	sprite_free( p_state );
 }
 
 
@@ -94,7 +96,7 @@ int sprite_state_name_compare( const char* name1, const char* name2 )
 
 sprite_t* sprite_create( const char* name, bool use_transparency )
 {
-	sprite_t* p_sprite = malloc( sizeof(sprite_t) );
+	sprite_t* p_sprite = sprite_alloc( sizeof(sprite_t) );
 
 	if( p_sprite )
 	{
@@ -131,7 +133,7 @@ void _sprite_create( sprite_t* p_sprite, const char* name, bool use_transparency
 	p_sprite->pixels          = NULL;
 
 	tree_map_create( &p_sprite->states, (tree_map_element_function) sprite_state_map_destroy,
-  	                 (tree_map_compare_function) sprite_state_name_compare, malloc, free );
+  	                 (tree_map_compare_function) sprite_state_name_compare, sprite_alloc, sprite_free );
 	p_sprite->state_itr = NULL;
 }
 
@@ -145,7 +147,7 @@ void sprite_destroy( sprite_t** p_sprite )
 
 		_sprite_destroy( *p_sprite );
 
-		free( *p_sprite );
+		sprite_free( *p_sprite );
 		*p_sprite = NULL;
 	}
 }
@@ -156,7 +158,7 @@ void _sprite_destroy( sprite_t* p_sprite )
 
 	if( p_sprite->name )
 	{
-		free( p_sprite->name );
+		sprite_free( p_sprite->name );
 		#ifdef SPRITE_DEBUG
 		p_sprite->name        = NULL;
 		p_sprite->name_length = 0;
@@ -165,7 +167,7 @@ void _sprite_destroy( sprite_t* p_sprite )
 
 	if( p_sprite->pixels )
 	{
-		free( p_sprite->pixels );
+		sprite_free( p_sprite->pixels );
 		#ifdef SPRITE_DEBUG
 		p_sprite->width           = 0;
 		p_sprite->height          = 0;
@@ -181,7 +183,7 @@ void sprite_set_name( sprite_t* p_sprite, const char* name )
 {
 	if( p_sprite->name )
 	{
-		free( p_sprite->name );
+		sprite_free( p_sprite->name );
 	}
 
 	if( !name || *name == '\0' )
@@ -202,11 +204,11 @@ void sprite_set_texture( sprite_t* p_sprite, uint16_t w, uint16_t h, uint16_t by
 
 	if( p_sprite->pixels )
 	{
-		free( p_sprite->pixels );
+		sprite_free( p_sprite->pixels );
 	}
 
 	size_t size = sizeof(uint8_t) * p_sprite->width * p_sprite->height * p_sprite->bytes_per_pixel;
-	p_sprite->pixels = malloc( size );
+	p_sprite->pixels = sprite_alloc( size );
 	memcpy( p_sprite->pixels, pixels, size );
 }
 
@@ -540,13 +542,13 @@ sprite_t* sprite_from_file( const char* filename )
 
 	sprite_read( &p_sprite->name_length, sizeof(p_sprite->name_length), file, is_big_endian );
 	assert( p_sprite->name_length > 0 );
-	p_sprite->name = malloc( sizeof(char) * p_sprite->name_length );
+	p_sprite->name = sprite_alloc( sizeof(char) * p_sprite->name_length );
 	fread( p_sprite->name, sizeof(char), p_sprite->name_length + 1, file );
 
 	sprite_read( &p_sprite->width, sizeof(p_sprite->width), file, is_big_endian );
 	sprite_read( &p_sprite->height, sizeof(p_sprite->height), file, is_big_endian );
 	fread( &p_sprite->bytes_per_pixel, sizeof(uint8_t), 1, file );
-	p_sprite->pixels = malloc( sizeof(uint8_t) * p_sprite->width * p_sprite->height * p_sprite->bytes_per_pixel );
+	p_sprite->pixels = sprite_alloc( sizeof(uint8_t) * p_sprite->width * p_sprite->height * p_sprite->bytes_per_pixel );
 	sprite_read( p_sprite->pixels, sizeof(uint8_t) * p_sprite->width * p_sprite->height * p_sprite->bytes_per_pixel, file, is_big_endian );
 
 	uint16_t state_count = 0;

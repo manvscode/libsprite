@@ -1,6 +1,6 @@
 
 # Add new files in alphabetical order. Thanks.
-libsprite_src = texture-packer.c sprite.c sprite-player.c
+libsprite_src = texture-packer.c sprite.c sprite-player.c sprite-mem.c
 
 # Add new files in alphabetical order. Thanks.
 libsprite_headers = texture-packer.h sprite.h

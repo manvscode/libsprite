@@ -46,6 +46,11 @@ typedef struct sprite_frame {
 	uint16_t time;
 } sprite_frame_t;
 
+	
+typedef void* (*sprite_alloc_fxn_t) ( size_t size );
+typedef void  (*sprite_free_fxn_t)  ( void* ptr );
+	
+	
 
 sprite_t*       sprite_create             ( const char* name, bool use_transparency );
 void            sprite_destroy            ( sprite_t** p_sprite );
@@ -106,6 +111,9 @@ void                  sprite_player_pause         ( sprite_player_t* sp );
 void                  sprite_player_unpause       ( sprite_player_t* sp );
 void                  sprite_player_render        ( sprite_player_t* sp, sprite_render_fxn_t render );
 const sprite_frame_t* sprite_player_frame         ( sprite_player_t* sp );
+
+
+void sprite_mem_set_fxns( sprite_alloc_fxn_t alloc, sprite_free_fxn_t free );
 
 #ifdef __cplusplus
 }
