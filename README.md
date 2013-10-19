@@ -1,11 +1,12 @@
-libimageio
+libsprite
 =============
 
-A simple library for loading and saving BMP, TGA, and PNG images.
+A library of sprite data structures for video games.
 
 Dependecies
 =============
-* libpng
+* libutility
+* libcollections
 
 License
 =============
