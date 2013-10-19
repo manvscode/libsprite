@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		088800EC18132DB2004A3FA1 /* sprite-mem.c in Sources */ = {isa = PBXBuildFile; fileRef = 088800EA18132DB2004A3FA1 /* sprite-mem.c */; };
+		088800ED18132DB2004A3FA1 /* sprite-mem.h in Headers */ = {isa = PBXBuildFile; fileRef = 088800EB18132DB2004A3FA1 /* sprite-mem.h */; };
 		08C284A8180DD4C000E96BF5 /* libsprite-config.h in Headers */ = {isa = PBXBuildFile; fileRef = 08C284A2180DD4C000E96BF5 /* libsprite-config.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		08C284A9180DD4C000E96BF5 /* sprite-player.c in Sources */ = {isa = PBXBuildFile; fileRef = 08C284A3180DD4C000E96BF5 /* sprite-player.c */; };
 		08C284AA180DD4C000E96BF5 /* sprite.c in Sources */ = {isa = PBXBuildFile; fileRef = 08C284A4180DD4C000E96BF5 /* sprite.c */; };
@@ -64,6 +66,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		088800EA18132DB2004A3FA1 /* sprite-mem.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "sprite-mem.c"; path = "../../src/sprite-mem.c"; sourceTree = "<group>"; };
+		088800EB18132DB2004A3FA1 /* sprite-mem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "sprite-mem.h"; path = "../../src/sprite-mem.h"; sourceTree = "<group>"; };
 		08C2849A180DD44D00E96BF5 /* libsprite.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libsprite.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		08C284A2180DD4C000E96BF5 /* libsprite-config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "libsprite-config.h"; path = "../../src/libsprite-config.h"; sourceTree = "<group>"; };
 		08C284A3180DD4C000E96BF5 /* sprite-player.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "sprite-player.c"; path = "../../src/sprite-player.c"; sourceTree = "<group>"; };
@@ -114,6 +118,8 @@
 		08C284A1180DD4AA00E96BF5 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				088800EA18132DB2004A3FA1 /* sprite-mem.c */,
+				088800EB18132DB2004A3FA1 /* sprite-mem.h */,
 				08C284A2180DD4C000E96BF5 /* libsprite-config.h */,
 				08C284A3180DD4C000E96BF5 /* sprite-player.c */,
 				08C284A4180DD4C000E96BF5 /* sprite.c */,
@@ -156,6 +162,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				08C284A8180DD4C000E96BF5 /* libsprite-config.h in Headers */,
+				088800ED18132DB2004A3FA1 /* sprite-mem.h in Headers */,
 				08C284AD180DD4C000E96BF5 /* texture-packer.h in Headers */,
 				08C284AB180DD4C000E96BF5 /* sprite.h in Headers */,
 			);
@@ -253,6 +260,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				088800EC18132DB2004A3FA1 /* sprite-mem.c in Sources */,
 				08C284AC180DD4C000E96BF5 /* texture-packer.c in Sources */,
 				08C284AA180DD4C000E96BF5 /* sprite.c in Sources */,
 				08C284A9180DD4C000E96BF5 /* sprite-player.c in Sources */,
