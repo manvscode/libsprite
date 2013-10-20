@@ -2,11 +2,14 @@
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
+#include <time.h>
 #include <libcollections/array.h>
 #include "sprite.h"
 #include "sprite-mem.h"
 
-static sprite_timer_fxn_t sprite_timer = NULL;
+static uint32_t default_timer( void );
+
+static sprite_timer_fxn_t sprite_timer = default_timer;
 
 struct sprite_player {
 	const sprite_t* sprite;
@@ -75,6 +78,7 @@ void sprite_player_play( sprite_player_t* sp, const char* name )
 
 void sprite_player_play_state( sprite_player_t* sp, const sprite_state_t* state )
 {
+	assert( state );
 	if( state != sp->state )
 	{
 		sp->state           = state;
@@ -135,12 +139,12 @@ void sprite_player_render( sprite_player_t* sp, sprite_render_fxn_t render )
 
 	const sprite_frame_t* frame = sprite_state_frame( sp->state, sp->frame_index );
 	assert( frame );
-	uint32_t now = sprite_timer( );
-	int32_t diff = now - sp->last_frame_time;
+	uint32_t now    = sprite_timer( );
+	int32_t elapsed = now - sp->last_frame_time;
 
 	render( frame );
 
-	if( sp->is_playing && diff > frame->time )
+	if( sp->is_playing && elapsed > frame->time )
 	{
 		/* Show the next sprite frame */
 		sp->frame_index++;
@@ -172,15 +176,24 @@ const sprite_frame_t* sprite_player_frame( sprite_player_t* sp )
 
 	const sprite_frame_t* frame = sprite_state_frame( sp->state, sp->frame_index );
 	assert( frame );
-	uint32_t now = sprite_timer( );
-	int32_t diff = now - sp->last_frame_time;
+	uint32_t now    = sprite_timer( );
+	int32_t elapsed = now - sp->last_frame_time;
 
-	if( sp->is_playing && diff > frame->time )
+	if( sp->is_playing && elapsed > frame->time )
 	{
+
 		/* Show the next sprite frame */
 		sp->frame_index++;
 		sp->last_frame_time = now;
 	}
 
 	return frame;
+}
+
+
+#define CLOCKS_PER_MILLISECOND   (CLOCKS_PER_SEC / 1000)
+
+uint32_t default_timer( void )
+{
+	return (uint32_t) (clock() / CLOCKS_PER_MILLISECOND);
 }

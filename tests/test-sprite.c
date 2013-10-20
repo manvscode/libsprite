@@ -203,7 +203,7 @@ void initialize( void )
 	if( texture )
 	{
 		glActiveTexture( GL_TEXTURE0 );
-		tex2d_setup_texture ( texture, sprite_width(robot.sprite), sprite_height(robot.sprite), sprite_bit_depth(robot.sprite), sprite_pixels(robot.sprite), GL_LINEAR, GL_LINEAR, true );
+		tex2d_setup_texture ( texture, sprite_width(robot.sprite), sprite_height(robot.sprite), sprite_bit_depth(robot.sprite), sprite_pixels(robot.sprite), GL_NEAREST, GL_NEAREST, true );
 		GL_ASSERT_NO_ERROR( );
 	}
 
@@ -336,7 +336,8 @@ void entity_initialize( entity_t* e, const char* sprite_file )
 	e->target_speed.x = 0.0f;
 	e->target_speed.y = 0.0f;
 
-	//sprite_player_play( e->sp, "idle" );
+	sprite_player_set_timer( SDL_GetTicks );
+	sprite_player_play( e->sp, "idle" );
 }
 
 void entity_update( entity_t* e, const uint32_t delta )
