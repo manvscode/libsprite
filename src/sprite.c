@@ -548,8 +548,13 @@ sprite_t* sprite_from_file( const char* filename )
 	sprite_read( &p_sprite->width, sizeof(p_sprite->width), file, is_big_endian );
 	sprite_read( &p_sprite->height, sizeof(p_sprite->height), file, is_big_endian );
 	fread( &p_sprite->bytes_per_pixel, sizeof(uint8_t), 1, file );
-	p_sprite->pixels = sprite_alloc( sizeof(uint8_t) * p_sprite->width * p_sprite->height * p_sprite->bytes_per_pixel );
-	sprite_read( p_sprite->pixels, sizeof(uint8_t) * p_sprite->width * p_sprite->height * p_sprite->bytes_per_pixel, file, is_big_endian );
+
+	size_t pixel_size = sizeof(uint8_t) * p_sprite->width * p_sprite->height * p_sprite->bytes_per_pixel;
+	if( pixel_size > 0 )
+	{
+		p_sprite->pixels = sprite_alloc( pixel_size );
+		sprite_read( p_sprite->pixels, pixel_size, file, is_big_endian );
+	}
 
 	uint16_t state_count = 0;
 	sprite_read( &state_count, sizeof(state_count), file, is_big_endian );
@@ -616,7 +621,12 @@ bool sprite_save( sprite_t* p_sprite, const char* filename )
 	sprite_write( &p_sprite->width, sizeof(p_sprite->width), file, is_big_endian );
 	sprite_write( &p_sprite->height, sizeof(p_sprite->height), file, is_big_endian );
 	fwrite( &p_sprite->bytes_per_pixel, sizeof(uint8_t), 1, file );
-	sprite_write( p_sprite->pixels, sizeof(uint8_t) * p_sprite->width * p_sprite->height * p_sprite->bytes_per_pixel, file, is_big_endian );
+
+	size_t pixel_size = sizeof(uint8_t) * p_sprite->width * p_sprite->height * p_sprite->bytes_per_pixel;
+	if( pixel_size > 0 )
+	{
+		sprite_write( p_sprite->pixels, pixel_size, file, is_big_endian );
+	}
 
 	uint16_t state_count = tree_map_size( &p_sprite->states );
 	sprite_write( &state_count, sizeof(state_count), file, is_big_endian );

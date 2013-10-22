@@ -51,12 +51,13 @@ static void add( sprite_t* sprite, const char* state, const char* image );
 struct {
 	sprite_t* sprite;
 	tp_t* tp;
-	bool verbose;
 	const char* state;
 	uint16_t frame_time;
 	uint16_t state_loop_count;
 	uint16_t frame_count_for_state;
-} sprite_compiler = { NULL, NULL, false, NULL, DEFAULT_FRAME_TIME, 0, 0 };
+	bool verbose;
+	bool using_with_iphone = true;
+} sprite_compiler = { NULL, NULL, NULL, DEFAULT_FRAME_TIME, 0, 0, false, false };
 
 static struct option long_options[] =
 {
@@ -66,6 +67,7 @@ static struct option long_options[] =
 	{"file",          required_argument, 0, 'f'},
 	{"info",          no_argument,       0, 'i'},
 	{"export",        no_argument,       0, 'x'},
+	{"ios",           no_argument,       0, 'p'},
 
 	{"time",          required_argument, 0, 't'},
 	{"loop-count",    required_argument, 0, 'l'},
@@ -92,7 +94,7 @@ int main( int argc, char* argv[] )
 	int opt;
 	int opt_idx;
 
-	while( (opt = getopt_long(argc, argv, "vhixc:f:a:t:l:", long_options, &opt_idx)) != -1 )
+	while( (opt = getopt_long(argc, argv, "vhixpc:f:a:t:l:", long_options, &opt_idx)) != -1 )
 	{
 		switch( opt )
 		{
@@ -127,7 +129,10 @@ int main( int argc, char* argv[] )
 				add( sprite_compiler.sprite, state, image );
 				break;
 			}
-			case 'd':
+			case 'd': /* TODO: Implementing deleting */
+				break;
+			case 'p':
+				sprite_compiler.using_with_iphone = true;
 				break;
 			case 'x':
 			{
