@@ -56,7 +56,7 @@ struct {
 	uint16_t state_loop_count;
 	uint16_t frame_count_for_state;
 	bool verbose;
-	bool using_with_iphone = true;
+	bool using_with_iphone;
 } sprite_compiler = { NULL, NULL, NULL, DEFAULT_FRAME_TIME, 0, 0, false, false };
 
 static struct option long_options[] =

@@ -81,10 +81,12 @@ void sprite_player_play_state( sprite_player_t* sp, const sprite_state_t* state 
 	assert( state );
 	if( state != sp->state )
 	{
+ 		uint16_t state_loop_count = sprite_state_loop_count(state);
+
 		sp->state           = state;
 		sp->frame_index     = 0;
 		sp->last_frame_time = sprite_timer( );
-		sp->loop_count      = sprite_state_loop_count( state ) - 1;
+		sp->loop_count      = state_loop_count > 0 ? (state_loop_count - 1) : 0;
 		sp->is_playing      = true;
 		assert( sp->loop_count >= 0 );
 	}

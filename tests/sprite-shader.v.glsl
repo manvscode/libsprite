@@ -9,20 +9,7 @@ uniform mat4 u_model_view;
 uniform int u_orientation;
 
 void main( ) {
-
-
-	mat2 scale;
-
-	if( u_orientation > 0 )
-	{
-		scale = mat2( 1, 0, 0, 1 );
-	}
-	else
-	{
-		scale = mat2( -1, 0, 0, 1 );
-	}
-
-	gl_Position = u_model_view * vec4( scale * a_vertex, 0.0, 1.0 );
+	gl_Position = u_model_view * vec4( a_vertex, 0.0, 1.0 );
 	f_tex_coord = a_tex_coord;	
 	f_color = vec4(1.0);
 }

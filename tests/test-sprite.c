@@ -185,8 +185,8 @@ void initialize( void )
 	dump_gl_info( );
 	glClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
 
-	glDisable( GL_DEPTH_TEST );
-	glDisable( GL_CULL_FACE );
+	glEnable( GL_DEPTH_TEST );
+	glEnable( GL_CULL_FACE );
 	glCullFace( GL_BACK );
 	GL_ASSERT_NO_ERROR( );
 	glPointSize( 4.0 );
