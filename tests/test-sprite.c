@@ -48,7 +48,6 @@ static void entity_render     ( entity_t* e );
 static void sprite_render     ( const sprite_frame_t* frame );
 
 SDL_Window* window = NULL;
-SDL_Renderer* renderer = NULL;
 SDL_GLContext ctx = NULL;
 
 GLuint vao = 0;
@@ -98,18 +97,23 @@ int main( int argc, char* argv[] )
 		goto quit;
 	}
 
-	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, 3 );
-	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 2 );
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, 2 );
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 1 );
 	SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
 
 	SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
-	SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 24 );
+	SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 8 );
+	SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 8 );
+	SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, 8 );
+	SDL_GL_SetAttribute( SDL_GL_ALPHA_SIZE, 8 );
+	SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 8 );
+	SDL_GL_SetAttribute( SDL_GL_MULTISAMPLEBUFFERS, 1 );
+	SDL_GL_SetAttribute( SDL_GL_MULTISAMPLESAMPLES, 2 );
 
 	int flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
 	//flags |= SDL_WINDOW_FULLSCREEN;
 	window = SDL_CreateWindow( "Test Robot Sprite", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, flags );
 
-	renderer = SDLCALL SDL_CreateRenderer( window, -1, SDL_RENDERER_ACCELERATED );
 
 	if( window == NULL )
 	{
@@ -140,7 +144,6 @@ int main( int argc, char* argv[] )
 
 quit:
 	if( ctx ) SDL_GL_DeleteContext( ctx );
-	if( renderer ) SDL_DestroyRenderer( renderer );
 	if( window ) SDL_DestroyWindow( window );
 	SDL_Quit( );
 	return 0;
@@ -198,20 +201,21 @@ void initialize( void )
 	glEnable( GL_BLEND );
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 
-	texture = tex2d_create( );
+	texture = tex_create( );
 
 	if( texture )
 	{
+		GLubyte flags = TEX_CLAMP_S | TEX_CLAMP_T;
 		glActiveTexture( GL_TEXTURE0 );
-		tex2d_setup_texture ( texture, sprite_width(robot.sprite), sprite_height(robot.sprite), sprite_bit_depth(robot.sprite), sprite_pixels(robot.sprite), GL_NEAREST, GL_NEAREST, true );
+		tex_setup_texture( texture, sprite_width(robot.sprite), sprite_height(robot.sprite), 0, sprite_bit_depth(robot.sprite), sprite_pixels(robot.sprite), GL_NEAREST, GL_NEAREST, flags, 2 );
 		GL_ASSERT_NO_ERROR( );
 	}
 
 	GLchar* shader_log  = NULL;
 	GLchar* program_log = NULL;
 	const shader_info_t shaders[] = {
-		{ GL_VERTEX_SHADER,   "/Users/manvscode/projects/libsprite/tests/sprite-shader.v.glsl" },
-		{ GL_FRAGMENT_SHADER, "/Users/manvscode/projects/libsprite/tests/sprite-shader.f.glsl" }
+		{ GL_VERTEX_SHADER,   "./tests/sprite-shader.v.glsl" },
+		{ GL_FRAGMENT_SHADER, "./tests/sprite-shader.f.glsl" }
 	};
 
 	if( !glsl_program_from_shaders( &program, shaders, shader_info_count(shaders), &shader_log, &program_log ) )
@@ -229,7 +233,7 @@ void initialize( void )
 		}
 
 		printf( "Shaders did not compile and link!!\n" );
-		return;
+		exit( EXIT_FAILURE );
 	}
 
 	assert( program > 0 );
@@ -283,7 +287,7 @@ void initialize( void )
 
 void deinitialize( void )
 {
-	tex2d_destroy( texture );
+	tex_destroy( texture );
 	glDeleteVertexArrays( 1, &vao );
 	glDeleteBuffers( 1, &vbo_vertices );
 	glDeleteBuffers( 1, &vbo_tex_coords );
@@ -327,6 +331,7 @@ void entity_initialize( entity_t* e, const char* sprite_file )
 {
 	e->sprite      = sprite_from_file( sprite_file );
 	e->sp          = sprite_player_create( e->sprite );
+	assert( e->sprite );
 	e->orientation = 1;
 	e->position.x  = 0.0f;
 	e->position.y  = 0.0f;
