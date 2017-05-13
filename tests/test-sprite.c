@@ -70,7 +70,7 @@ static entity_t robot;
 static bool exiting         = false;
 static uint32_t delta       = 0;
 
-static GLfloat sprite_mesh[] = {
+static const GLfloat sprite_mesh[] = {
 	-0.5f, -0.5f,
 	 0.5f, -0.5f,
 	-0.5f,  0.5f,
@@ -79,7 +79,7 @@ static GLfloat sprite_mesh[] = {
 	 0.5f,  0.5f,
 };
 
-static GLfloat sprite_uvs[] = {
+static const GLfloat sprite_uvs[] = {
 	0.0f, 0.0f,  // bottom-left
 	1.0f, 0.0f,  // bottom-right
 	0.0f, 1.0f,
